@@ -37,7 +37,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
     void init_my_debug()
     {
-        dbgSerial.begin(115200);
+        dbgSerial.begin(MY_BAUD_RATE);
         checkMem();
     }
     
