@@ -82,13 +82,25 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             return obuf;
         }
 
-                
         void display_bytes(int level, const char *label, uint8_t *buf, int len)
         {
             if (level > debug_level) return;
+            display_bytes_ep(level,0,label,buf,len);
+        }
+
+                
+        void display_bytes_ep(int level, uint8_t ep, const char *label, uint8_t *buf, int len)
+        {
+            if (level > debug_level) return;
             char *obuf = disp_bytes_buf;
-            
             obuf = indent_buf(obuf);
+            
+            uint8_t space_len = 4;
+            if (ep)
+            {
+                *obuf++ = '0' + ep;
+                space_len = 5;
+            }
             while (*label)
             {
                 *obuf++ = *label++;
@@ -115,7 +127,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                         *obuf++ = 10;   // "\r";
                         *obuf++ = 13;   // "\n";
                         obuf = indent_buf(obuf);
-                        for (int i=0; i<4; i++)
+                        for (int i=0; i<space_len; i++)
                         {
                             *obuf++ = ' ';
                         }
@@ -139,6 +151,9 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             *obuf++ = 0;
             dbgSerial.println(disp_bytes_buf);
         }
+
+
+
     
     #else      // display_bytes() on arduino
     

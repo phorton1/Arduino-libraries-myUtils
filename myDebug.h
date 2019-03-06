@@ -148,6 +148,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
     void indent();
     void clearPutty();
     void display_bytes(int level, const char *label, uint8_t *buf, int len);
+    void display_bytes_ep(int level, uint8_t ep, const char *label, uint8_t *buf, int len);
     void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len);
 
     
@@ -163,6 +164,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
     #define hex4(u)
     #define hex8(ul)
     #define display_bytes(a,b,c,d)
+    #define display_bytes_ep(a,e,b,c,d)
     #define display_bytes_long(a,b,c,d)
     #define proc_entry()       
     #define proc_leave()
