@@ -26,7 +26,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 }
 
 
-#if USE_MY_DEBUG || USE_MY_DISPLAY
+#if USE_MY_DISPLAY
 
     int proc_level = 0;
 
@@ -241,7 +241,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         }
     }
     
-#endif  // USE_MY_DEBUG || USE_MY_DISPLAY
+#endif  // USE_MY_DISPLAY
 
 
     

@@ -49,10 +49,9 @@
 //                  <--   sending to myMax3421e
 
 
-#define USE_MY_DEBUG  1
-    // Turn on all debug() and display()
+   
 #define USE_MY_DISPLAY  1
-    // Turn on just display() routines
+    // Turn on display() routines
 #define USE_MEMORY_CHECK  1
     // Turn on memory checking (not on teensy)
 
@@ -78,15 +77,16 @@
     
 extern int debug_level;
     // always defined so code that might touch it
-    // does not have `to change if !USE_MY_DEBUG
+    // does not have `to change if !USE_MY_DISPLAY
 uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
     // always available
+
 
 //----------------------------------------
 // display routines
 //----------------------------------------
 
-#if USE_MY_DEBUG || USE_MY_DISPLAY 
+#if USE_MY_DISPLAY 
 
     #define display0(l,f)       {       \
         if (l <= debug_level)           \
@@ -152,7 +152,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
     void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len);
 
     
-#else   // !USE_MY_DEBUG && !USE_MY_DISPLAY
+#else   // !USE_MY_DISPLAY
 
     #define init_my_debug()
     #define clearPutty()
@@ -170,74 +170,6 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
     #define proc_leave()
 
 #endif  // !USE_MY_DEBUG && !USE_MY_DISPLAY
-
-
-//----------------------------------------
-// separate DEBUG only routines
-//----------------------------------------
-
-#if USE_MY_DEBUG
-
-
-    #define debug0(l,f)       {       \
-        if (l <= debug_level)           \
-        {                               \
-            char dt_buf[120];           \
-            strcpy_P(dt_buf,f);         \
-            indent();                   \
-            dbgSerial.println(dt_buf);  \
-        }}
-    
-    #define debug1(l,f,p1)   {        \
-        if (l <= debug_level)           \
-        {                               \
-            char dt_buf[120];           \
-            indent();                   \
-            strcpy_P(dt_buf,f);         \
-            dbgSerial.print(dt_buf);    \
-            dbgSerial.print(" ");       \
-            dbgSerial.println(p1);      \
-        }}
-    #define debug2(l,f,p1,p2) {       \
-        if (l <= debug_level)           \
-        {                               \
-            char dt_buf[120];           \
-            strcpy_P(dt_buf,f);         \
-            indent();                   \
-            dbgSerial.print(dt_buf);    \
-            dbgSerial.print(" ");       \
-            dbgSerial.print(p1);        \
-            dbgSerial.print(" ");       \
-            dbgSerial.println(p2);      \
-        }}
-    #define debug3(l,f,p1,p2,p3) {    \
-        if (l <= debug_level)           \
-        {                               \
-            char dt_buf[120];           \
-            strcpy_P(dt_buf,f);         \
-            indent();                   \
-            dbgSerial.print(dt_buf);    \
-            dbgSerial.print(" ");       \
-            dbgSerial.print(p1);        \
-            dbgSerial.print(" ");       \
-            dbgSerial.print(p2);        \
-            dbgSerial.print(" ");       \
-            dbgSerial.println(p3);      \
-        }}
-    
-    #define debug_bytes(a,b,c,d)        display_bytes(a,b,c,d)
-    #define debug_bytes_long(a,b,c,d)   display_bytes_long(a,b,c,d)
-
-#else   // !USE_MY_DEBUG
-
-    #define debug0(l,f)
-    #define debug1(l,f,p1)
-    #define debug2(l,f,p1,p2)
-    #define debug3(l,f,p1,p2,p3)
-    #define debug_bytes(a,b,c,d)
-    #define debug_bytes_long(a,b,c,d)
-
-#endif  // !USE_MY_DEBUG
 
 
 //----------------------------------------
