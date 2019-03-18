@@ -58,8 +58,8 @@
         
 #ifdef CORE_TEENSY    
     // use the hardware Serial1 port on TEENSY
-    #define USE_SERIAL1  1
-    #define MY_BAUD_RATE  921600    // 921600, 460800, 230400, 115200
+    #define USE_SERIAL1  0
+    #define MY_BAUD_RATE  115200    // 921600    // 921600, 460800, 230400, 115200
     #undef USE_MEMORY_CHECK
 #else
     #define USE_SERIAL1  0
