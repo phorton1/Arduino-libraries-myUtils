@@ -30,11 +30,45 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
     int proc_level = 0;
 
-    char hex_buf[10];
-    char *hex2(uint8_t b)  { sprintf(hex_buf,"0x%02x",b); return hex_buf; }
-    char *hex4(uint16_t u) { sprintf(hex_buf,"0x%04x",u); return hex_buf; }
-    char *hex8(uint32_t l) { sprintf(hex_buf,"0x%08lx",l); return hex_buf; }
-
+    //-------------------------
+    // hex display routines
+    //-------------------------
+    // use 4 buffers so they can be
+    // called from my display macros
+    
+    #define NUM_HEX_BUFS  4
+    char hex_buf[NUM_HEX_BUFS][10];
+    int next_hex_buf = 0;
+    
+    char *hex2(uint8_t v)
+    {
+        int bnum = next_hex_buf++;
+        sprintf(hex_buf[bnum],"0x%02x",v);
+        if (next_hex_buf>=NUM_HEX_BUFS) next_hex_buf=0;
+        return hex_buf[bnum];
+    }
+    
+    char *hex4(uint16_t v)
+    {
+        int bnum = next_hex_buf++;
+        sprintf(hex_buf[bnum],"0x%04x",v);
+        if (next_hex_buf>=NUM_HEX_BUFS) next_hex_buf=0;
+        return hex_buf[bnum];
+    }
+    
+    char *hex8(uint32_t v)
+    {
+        int bnum = next_hex_buf++;
+        sprintf(hex_buf[bnum],"0x%08lx",v);
+        if (next_hex_buf>=NUM_HEX_BUFS) next_hex_buf=0;
+        return hex_buf[bnum];
+    }
+    
+    
+    //-------------------------
+    // rest of API
+    //-------------------------
+    
     void init_my_debug()
     {
         dbgSerial.begin(MY_BAUD_RATE);
