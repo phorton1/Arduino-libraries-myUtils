@@ -93,16 +93,19 @@
 
 #if WITH_DISPLAY_BYTES    
     extern void display_bytes(int level, const char *label, uint8_t *buf, int len);
+    #ifdef CORE_TEENSY
+        // display_bytes_ep() only available on teensy
+        extern void display_bytes_ep(int level, uint8_t ep, const char *label, uint8_t *buf, int len);
+    #endif
 #else
+    #ifdef CORE_TEENSY
+        // and we enforce it by not defining a null method otherwise
+        #define display_bytes_ep(l,a,b,x,z)
+    #endif
     #define display_bytes(l,a,b,z)
 #endif
 
 
-#if WITH_DISPLAY_BYTES_EP
-    extern void display_bytes_ep(int level, uint8_t ep, const char *label, uint8_t *buf, int len);
-#else
-    #define display_bytes_ep(l,a,b,x,z)
-#endif
 
     
 #if WITH_DISPLAY_BYTES_LONG    

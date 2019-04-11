@@ -208,9 +208,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
 
 
-#if USE_MY_DISPLAY
-
-    int proc_level = 0;
+#if OLD_STUFF
 
     //-------------------------
     // hex display routines
@@ -265,20 +263,11 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         dbgSerial.print("\033[3J");
         
     }
+#endif
 
-    void indent()
-    {
-        if (proc_level < 0)
-        {
-            dbgSerial.println("WARNING: MISSING (unbalanced) proc_entry!!");
-            proc_level = 0;
-        }
-        int i=proc_level;
-        // if (i>12) i=12;
-        while (i--) { dbgSerial.print("    "); };
-    }
 
-    
+#if WITH_DISPLAY_BYTES
+
     #ifdef CORE_TEENSY
     
         // optimized version of display_bytes (speed vs memory)
@@ -368,9 +357,6 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             dbgSerial.println(disp_bytes_buf);
         }
 
-
-
-    
     #else      // display_bytes() on arduino
     
         void display_bytes(int level, const char *label, uint8_t *buf, int len)
@@ -411,8 +397,11 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         }
         
     #endif      // arduino version of display_bytes
-    
-    
+#endif // WITH_DISPLAY_BYTES
+
+
+#if WITH_DISPLAY_BYTES_LONG
+
     void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len)
     {
         checkMem();    
@@ -424,7 +413,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             return;
         }
         
-        char tbuf[6];
+        char tbuf[8];
         char char_buf[17];
         memset(char_buf,0,17);
         
@@ -440,8 +429,8 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                     memset(char_buf,0,17);
                 }
                 indent();
-                dbgSerial.print(hex4(addr + bnum));
-                dbgSerial.print(": ");
+                sprintf(tbuf,"0x%04x:",addr + bnum);
+                dbgSerial.print(tbuf);
             }
 
             uint8_t c = buf[bnum];
@@ -457,7 +446,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         }
     }
     
-#endif  // USE_MY_DISPLAY
+#endif  // WITH_DISPLAY_BYTES_LONG
 
 
     
