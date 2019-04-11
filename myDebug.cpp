@@ -5,11 +5,192 @@
 #include "myDebug.h"
 
 int debug_level = 0;
+int warning_level = 0;
+
+// string is "\033[%d;" with following
+// ansi color codes fore back
+//  
+//     Black 	        30 	40 
+//     Red 	            31 	41 
+//     Green 	        32 	42 
+//     Yellow 	        33 	43   brown
+//     Blue 	        34 	44 
+//     Magenta 	        35 	45 
+//     Cyan 	        36 	46 
+//     White 	        37 	47 
+//     Bright Black 	90 	100
+//     Bright Red 	    91 	101
+//     Bright Green 	92 	102
+//     Bright Yellow 	93 	103
+//     Bright Blue 	    94 	104
+//     Bright Magenta 	95 	105
+//     Bright Cyan 	    96 	106
+//     Bright White 	97  107
+
+#define COLOR_CONST_NONE     0
+#define COLOR_CONST_WARNING  1
+#define COLOR_CONST_ERROR    2
+
+#define DISPLAY_BUFFER_WARNING   10
+    // will get a warning before we use a format that is
+    // this close to the full buffer size.
+
+
+#ifdef CORE_TEENSY
+    #define DISPLAY_BUFFER_SIZE     255
+    #define PLATFORM_COLOR_STRING   "\033[92m"      // bright green    
+    #define WARNING_COLOR_STRING    "\033[93m"       // yellow   
+    #define ERROR_COLOR_STRING      "\033[91m"       // red   
+#else
+    #define DISPLAY_BUFFER_SIZE     80
+    #define PLATFORM_COLOR_STRING   "\033[96m"       // bright cyan
+    #define WARNING_COLOR_STRING    "\033[33m"       // brown
+    #define ERROR_COLOR_STRING      "\033[95m"       // magenta
+#endif
+
+
+#if WITH_DISPLAY || WITH_WARNINGS || WITH_ERRORS
+    char display_buffer1[DISPLAY_BUFFER_SIZE];
+    #if USE_PROGMEM
+        char display_buffer2[DISPLAY_BUFFER_SIZE];
+    #endif
+#endif
+
+
+#if WITH_INDENTS
+    int proc_level = 0;
+    void indent()
+    {
+        for (int i=0; i<proc_level; i++)
+            dbgSerial.print("    ");
+    }
+#endif
+
+
+#if WITH_DISPLAY
+    void clearDisplay()
+    {
+        dbgSerial.print("\033[2J");
+        dbgSerial.print("\033[3J");
+    }
+
+    void display_fxn(int level, const char *format, ...)
+    {
+        checkMem();
+        
+        if (level > debug_level)
+            return;
+        
+        va_list var;
+        va_start(var, format);
+        
+        #if USE_PROGMEM
+            dbgSerial.print((uint32_t) format);
+            dbgSerial.println(" == format");
+            // if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
+            // {
+            //     dbgSerial.println(F("error - display progmem buffer overflow"));
+            //     return;
+            // }
+            strcpy_P(display_buffer2,format);
+            vsprintf(display_buffer1,display_buffer2,var);
+        #else
+            if (strlen(format) >= DISPLAY_BUFFER_SIZE)
+            {
+                dbgSerial.println(F("error - display buffer overflow"));
+                return;
+            }
+            vsprintf(display_buffer1,format,var);
+        #endif
+
+        dbgSerial.print(PLATFORM_COLOR_STRING);
+        #if WITH_INDENTS
+            indent();
+        #endif
+        dbgSerial.println(display_buffer1);
+    }
+#endif
+
+
+#if WITH_WARNINGS
+    void warning_fxn(int level, const char *format, ...)
+    {
+        checkMem();
+
+        if (level > warning_level)
+            return;
+        
+        va_list var;
+        va_start(var, format);
+
+        #if USE_PROGMEM
+            if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
+            {
+                dbgSerial.println(F("error - warning progmem buffer overflow"));
+                return;
+            }
+            strcpy_P(display_buffer2,format);
+            vsprintf(display_buffer1,display_buffer2,var);
+        #else
+            if (strlen(format) >= DISPLAY_BUFFER_SIZE)
+            {
+                dbgSerial.println(F("error - warning buffer overflow"));
+                return;
+            }
+            vsprintf(display_buffer1,format,var);
+        #endif
+
+        dbgSerial.print(WARNING_COLOR_STRING);
+        #if WITH_INDENTS
+            indent();
+        #endif
+        dbgSerial.print("WARNING - ");
+        dbgSerial.println(display_buffer1);
+    }
+#endif
+
+
+
+#if WITH_ERRORS
+    void error_fxn(const char *format, ...)
+    {
+        checkMem();
+
+        va_list var;
+        va_start(var, format);
+        
+        #if USE_PROGMEM
+            if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
+            {
+                dbgSerial.println(F("error - error progmem buffer overflow"));
+                return;
+            }
+            strcpy_P(display_buffer2,format);
+            vsprintf(display_buffer1,display_buffer2,var);
+        #else
+            if (strlen(format) >= DISPLAY_BUFFER_SIZE)
+            {
+                dbgSerial.println(F("error - error buffer overflow"));
+                return;
+            }
+            vsprintf(display_buffer1,format,var);
+        #endif
+
+        dbgSerial.print(ERROR_COLOR_STRING);
+        dbgSerial.print("ERROR - ");
+        dbgSerial.println(display_buffer1);
+    }
+#endif
+
+
+
     // defined even if MY_DEBUG is turned off
 
 uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
     // available if !MY_DEBUG
 {
+    checkMem();
+    
     if (digitalRead(pin))
     {
         if (*state)
@@ -24,6 +205,9 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
     }
     return 0;
 }
+
+
+
 
 
 #if USE_MY_DISPLAY
