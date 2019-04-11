@@ -80,13 +80,13 @@
 
 #if WITH_ERRORS
     #if USE_PROGMEM
-        #define error(f,...)        error_fxn(PSTR(f),__VA_ARGS__)
+        #define my_error(f,...)        error_fxn(PSTR(f),__VA_ARGS__)
     #else
-        #define error(f,...)        error_fxn(f,__VA_ARGS__)
+        #define my_error(f,...)        error_fxn(f,__VA_ARGS__)
     #endif
     extern void error_fxn(const char *format, ...);
 #else
-    #define error(f,...)
+    #define my_error(f,...)
 #endif
 
 

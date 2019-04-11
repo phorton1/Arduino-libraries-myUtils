@@ -85,13 +85,11 @@ int warning_level = 0;
         va_start(var, format);
         
         #if USE_PROGMEM
-            dbgSerial.print((uint32_t) format);
-            dbgSerial.println(" == format");
-            // if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
-            // {
-            //     dbgSerial.println(F("error - display progmem buffer overflow"));
-            //     return;
-            // }
+            if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
+            {
+                dbgSerial.println(F("error - display progmem buffer overflow"));
+                return;
+            }
             strcpy_P(display_buffer2,format);
             vsprintf(display_buffer1,display_buffer2,var);
         #else
