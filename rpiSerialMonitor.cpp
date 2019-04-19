@@ -3,8 +3,8 @@
 #include "rpiSerialMonitor.h"
 
 
-#define PIN_PI_REBOOT     23      // from teensy to transistor base to reboot rpi
-#define PIN_PI_ACTIVE     22      // a led showing inverse of RPIM_REBOOT
+#define PIN_PI_REBOOT      2      // from teensy to transistor base to reboot rpi
+#define PIN_PI_ACTIVE     14      // a led showing inverse of RPIM_REBOOT
 
 #define IDLE_MS_FOR_KEYPRESS  200
 
@@ -30,7 +30,7 @@ void rpiSerialMonitor::rebootPi()
     display(0,"rpiSerialMonitor::rebootPi() called",0);
     digitalWrite(PIN_PI_ACTIVE,0);
     digitalWrite(PIN_PI_REBOOT,1);
-    delay(100);
+    delay(200);
     digitalWrite(PIN_PI_REBOOT,0);
     digitalWrite(PIN_PI_ACTIVE,1);
 }
