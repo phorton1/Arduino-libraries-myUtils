@@ -2,9 +2,18 @@
 #include "myDebug.h"
 #include "rpiSerialMonitor.h"
 
+#if  1  // rpi3b+ <--> teensy setup
 
-#define PIN_PI_REBOOT      2      // from teensy to transistor base to reboot rpi
+#define PIN_PI_REBOOT     16      // from teensy to transistor base to reboot rpi
 #define PIN_PI_ACTIVE     14      // a led showing inverse of RPIM_REBOOT
+
+#else   // my rpiZero <--> teensy seetup
+
+    #define PIN_PI_REBOOT      2      // from teensy to transistor base to reboot rpi
+    #define PIN_PI_ACTIVE     14      // a led showing inverse of RPIM_REBOOT
+
+#endif
+
 
 #define IDLE_MS_FOR_KEYPRESS  200
 
