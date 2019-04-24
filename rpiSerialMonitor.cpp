@@ -2,32 +2,44 @@
 #include "myDebug.h"
 #include "rpiSerialMonitor.h"
 
-#if  1  // rpi3b+ <--> teensy setup
+// inputs
 
-#define PIN_PI_REBOOT     16      // from teensy to transistor base to reboot rpi
-#define PIN_PI_ACTIVE     14      // a led showing inverse of RPIM_REBOOT
+#define SENSE_RPI_RUN      15      // sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
+#define SENSE_RPI_READY     2      // sense rpi GPIO25, HIGH == my program has initialized
 
-#else   // my rpiZero <--> teensy seetup
+// outputs
 
-    #define PIN_PI_REBOOT      2      // from teensy to transistor base to reboot rpi
-    #define PIN_PI_ACTIVE     14      // a led showing inverse of RPIM_REBOOT
-
-#endif
-
+#define LED_RPI_RUN        14      // show state of RPI_RUN sense
+#define LED_RPI_READY      11      // show state of RPI_READY sense
+#define PIN_PI_REBOOT      16      // (2 for rpiZero) HIGH==REBOOT
+    // PIN_PI_REBOOT brings the rpi RUN line to ground via
+    // the base of a transistor, causing the rPi to reboot.
 
 #define IDLE_MS_FOR_KEYPRESS  200
 
+
+
+
 rpiSerialMonitor::rpiSerialMonitor(uint8_t start_command, uint8_t num_commands)
 {
+    rpi_running = 0;
+    rpi_ready = 0;
+
     m_start_command = start_command;
     m_num_commands = num_commands;
     m_key_pressed = 0;
     m_key_timer = 0;
 
+    pinMode(LED_RPI_RUN,OUTPUT);
+    pinMode(LED_RPI_READY,OUTPUT);
     pinMode(PIN_PI_REBOOT,OUTPUT);
-    pinMode(PIN_PI_ACTIVE,OUTPUT);
+
+    pinMode(SENSE_RPI_RUN,INPUT_PULLDOWN);
+    pinMode(SENSE_RPI_READY,INPUT_PULLDOWN);
+    
+    digitalWrite(LED_RPI_RUN,0);
+    digitalWrite(LED_RPI_READY,1);
     digitalWrite(PIN_PI_REBOOT,0);
-    digitalWrite(PIN_PI_ACTIVE,1);
 }
 
 
@@ -37,16 +49,32 @@ rpiSerialMonitor::~rpiSerialMonitor() {}
 void rpiSerialMonitor::rebootPi()
 {
     display(0,"rpiSerialMonitor::rebootPi() called",0);
-    digitalWrite(PIN_PI_ACTIVE,0);
+    digitalWrite(LED_RPI_RUN,0);
+    digitalWrite(LED_RPI_READY,0);
     digitalWrite(PIN_PI_REBOOT,1);
-    delay(200);
+    // rpi_running = 0;
+    // rpi_ready = 0;
+    delay(400);
     digitalWrite(PIN_PI_REBOOT,0);
-    digitalWrite(PIN_PI_ACTIVE,1);
 }
 
     
 uint8_t rpiSerialMonitor::task()
 {
+    if (digitalRead(SENSE_RPI_RUN) != rpi_running)
+    {
+        rpi_running = !rpi_running;
+        digitalWrite(LED_RPI_RUN,rpi_running);
+        display(0,"rpi %s",(rpi_running ? "RUNNING" : "NOT RUNNING"));
+    }
+    if (digitalRead(SENSE_RPI_READY) != rpi_ready)
+    {
+        rpi_ready = !rpi_ready;
+        digitalWrite(LED_RPI_READY,rpi_ready);
+        display(0,"rpi %s",(rpi_ready ? "READY" : "NOT READY"));
+    }
+    
+    
     if (Serial.available())
     {
         int c = Serial.read();

@@ -21,6 +21,9 @@ public:
     
 private:
     
+    uint8_t rpi_running;
+    uint8_t rpi_ready;
+
     uint8_t m_start_command;
     uint8_t m_num_commands;
     uint8_t m_key_pressed;
