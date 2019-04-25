@@ -4,7 +4,8 @@
 
 #define DBG_KPD  1
 
-#define LONG_TIME  850
+#define DEBOUNCE_TIME 5
+#define LONG_TIME   850
     // milliseconds for a long press
 
 int ROW_PIN[KP_NUM_ROWS] = {3, 4, 5, 6};
@@ -18,6 +19,9 @@ int COL_PIN[KP_NUM_COLS] = {7, 8, 9, 10};
         
 void keyPadButton::check()
 {
+    uint32_t now = millis();
+    if (now < event_time + DEBOUNCE_TIME)
+        return;
     digitalWrite(COL_PIN[col],1);
     uint8_t st = digitalRead(ROW_PIN[row]) ?
         KP_STATE_DOWN : KP_STATE_UP;
@@ -27,7 +31,7 @@ void keyPadButton::check()
         if (st == KP_STATE_DOWN)
         {
             display(DBG_KPD,"button[%d,%d] DOWN",row,col);
-            event_time = millis();
+            event_time = now;
             state = KP_STATE_DOWN;
             if (handler[H_STATE_DOWN])
                 handler[H_STATE_DOWN](param[H_STATE_DOWN],row,col,state);
@@ -37,7 +41,7 @@ void keyPadButton::check()
             display(DBG_KPD,"button[%d,%d] UP",row,col);
             state |= KP_STATE_UP;
             state &= ~KP_STATE_DOWN;
-            event_time = millis();
+            event_time = now;
             
             if (handler[H_STATE_UP])
                 handler[H_STATE_UP](param[H_STATE_UP],row,col,state);
@@ -52,7 +56,7 @@ void keyPadButton::check()
     else if (handler[H_STATE_LONG] &&
              st == KP_STATE_DOWN &&
              !(state & KP_STATE_LONG) &&
-             millis() > event_time + LONG_TIME)
+             now > event_time + LONG_TIME)
              
     {
         state |= KP_STATE_LONG;
