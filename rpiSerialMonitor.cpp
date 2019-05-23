@@ -54,7 +54,7 @@ void rpiSerialMonitor::rebootPi()
     digitalWrite(PIN_PI_REBOOT,1);
     // rpi_running = 0;
     // rpi_ready = 0;
-    delay(400);
+    delay(900);
     digitalWrite(PIN_PI_REBOOT,0);
 }
 
