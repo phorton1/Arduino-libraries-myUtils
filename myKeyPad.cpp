@@ -126,7 +126,13 @@ myKeyPad::myKeyPad()
             buttons[r * KP_NUM_COLS + c].assign(r,c);
             
     for (int r=0; r<KP_NUM_ROWS; r++)
-        pinMode(ROW_PIN[r],INPUT_PULLDOWN);
+        pinMode(ROW_PIN[r],
+            #ifdef CORE_TEENSY
+                INPUT_PULLDOWN);
+            #else
+                INPUT);
+            #endif
+            
     for (int c=0; c<KP_NUM_COLS; c++)
         pinMode(COL_PIN[c],OUTPUT);
 }

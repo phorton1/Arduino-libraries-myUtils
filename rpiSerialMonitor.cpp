@@ -2,6 +2,9 @@
 #include "myDebug.h"
 #include "rpiSerialMonitor.h"
 
+#ifdef CORE_TEENSY
+
+
 // inputs
 
 #define SENSE_RPI_RUN      15      // sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
@@ -138,7 +141,7 @@ uint8_t rpiSerialMonitor::task()
     return 0;
 }
 
-
+#endif // CORE_TEENSY
 
 
 

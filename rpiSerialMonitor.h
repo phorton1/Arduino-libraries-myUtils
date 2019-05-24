@@ -1,6 +1,7 @@
 #ifndef __rpiSerialMonitor__
 #define __rpiSerialMonitor__
 
+#ifdef CORE_TEENSY
 
 class rpiSerialMonitor
 {
@@ -32,6 +33,6 @@ private:
     
 };
 
-
+#endif  // CORE_TEENSY
 
 #endif // !__rpiSerialMonitor__
