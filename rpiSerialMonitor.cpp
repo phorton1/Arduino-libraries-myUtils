@@ -7,14 +7,14 @@
 
 // inputs
 
-#define SENSE_RPI_RUN      15      // sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
-#define SENSE_RPI_READY     2      // sense rpi GPIO25, HIGH == my program has initialized
+#define SENSE_RPI_RUN      23      // A9 sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
+#define SENSE_RPI_READY    3       // sense rpi GPIO25, HIGH == my program has initialized
 
 // outputs
 
-#define LED_RPI_RUN        14      // show state of RPI_RUN sense
+#define LED_RPI_RUN        12      // show state of RPI_RUN sense
 #define LED_RPI_READY      11      // show state of RPI_READY sense
-#define PIN_PI_REBOOT      16      // (2 for rpiZero) HIGH==REBOOT
+#define PIN_PI_REBOOT      2      // (2 for rpiZero) HIGH==REBOOT
     // PIN_PI_REBOOT brings the rpi RUN line to ground via
     // the base of a transistor, causing the rPi to reboot.
 
