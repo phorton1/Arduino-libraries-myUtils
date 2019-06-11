@@ -7,8 +7,8 @@
 
 // inputs
 
-#define SENSE_RPI_RUN      23      // A9 sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
-#define SENSE_RPI_READY    3       // sense rpi GPIO25, HIGH == my program has initialized
+#define SENSE_RPI_RUN      3      // A9 sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
+#define SENSE_RPI_READY    4       // sense rpi GPIO25, HIGH == my program has initialized
 
 // outputs
 
