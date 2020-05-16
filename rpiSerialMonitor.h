@@ -20,6 +20,8 @@ public:
     uint8_t task();
     void    rebootPi();
     
+    bool rpiReady() { return rpi_running & rpi_ready; }
+    
 private:
     
     uint8_t rpi_running;
