@@ -5,14 +5,35 @@
 
 #include "Arduino.h"
 
-
 #define WITH_INDENTS        1
 #define WITH_DISPLAY        1
 #define WITH_WARNINGS       1
 #define WITH_ERRORS         1
-
 #define USE_PROGMEM         1
 #define USE_MEMORY_CHECK    1
+
+// #include <SoftwareSerial.h> and change below if you want
+// Change below on Teensy to Serial1 if you want
+
+#ifdef CORE_TEENSY
+    #undef USE_MEMORY_CHECK
+
+    // For Teensy, if the device is NOT configured for a serial port,
+    // we turn off the calls to display() etc ... we do this based on
+    // the absence of one of two defines USB_SERIAL or USB_MIDI_SERIAL
+
+    #if !defined(USB_SERIAL) && !defined(USB_MIDI_SERIAL)
+        #undef WITH_INDENTS  
+        #undef WITH_DISPLAY  
+        #undef WITH_WARNINGS 
+        #undef WITH_ERRORS   
+    #else
+        #define dbgSerial     Serial
+    #endif
+#else
+    #define dbgSerial     Serial
+#endif
+
 
 
 #if WITH_DISPLAY
@@ -27,16 +48,6 @@
     #define WITH_DISPLAY_BYTES_LONG  0
 #endif
     
-// #include <SoftwareSerial.h> and change below if you want
-// Change below on Teensy to Serial1 if you want
-
-#ifdef CORE_TEENSY
-    #define dbgSerial     Serial
-    #undef USE_MEMORY_CHECK
-#else
-    #define dbgSerial     Serial
-#endif
-
 
 
 //---------------------------------------------------
