@@ -22,7 +22,7 @@
     // we turn off the calls to display() etc ... we do this based on
     // the absence of one of two defines USB_SERIAL or USB_MIDI_SERIAL
 
-    #if !defined(USB_SERIAL) && !defined(USB_MIDI_SERIAL)
+    #if 0 && !defined(USB_SERIAL) && !defined(USB_MIDI_SERIAL)
         #undef WITH_INDENTS  
         #undef WITH_DISPLAY  
         #undef WITH_WARNINGS 
