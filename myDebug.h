@@ -4,6 +4,8 @@
 // Client initializes the serial port themselves
 
 #include "Arduino.h"
+// #include <stdint.h>
+
 
 #define WITH_INDENTS        1
 #define WITH_DISPLAY        1
