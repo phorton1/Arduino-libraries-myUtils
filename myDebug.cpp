@@ -413,7 +413,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             return;
         }
         
-        char tbuf[8];
+        char tbuf[20];
         char char_buf[17];
         memset(char_buf,0,17);
         
@@ -429,7 +429,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                     memset(char_buf,0,17);
                 }
                 indent();
-                sprintf(tbuf,"0x%04x:",addr + bnum);
+                sprintf(tbuf,"    0x%04x: ",addr + bnum);
                 dbgSerial.print(tbuf);
             }
 
@@ -441,6 +441,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         }
         if (bnum)
         {
+            while (bnum % 16 != 0) { dbgSerial.print("   "); bnum++; }
             dbgSerial.print("    ");
             dbgSerial.println(char_buf);
         }
