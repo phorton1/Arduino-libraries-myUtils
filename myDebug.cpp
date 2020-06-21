@@ -4,6 +4,10 @@
 
 #include "myDebug.h"
 
+#ifdef CORE_TEENSY
+    Stream *dbgSerial = &Serial;
+#endif
+
 int debug_level = 0;
 int warning_level = 0;
 
@@ -62,7 +66,7 @@ int warning_level = 0;
     void indent()
     {
         for (int i=0; i<proc_level; i++)
-            dbgSerial.print("    ");
+            dbgSerial->print("    ");
     }
 #endif
 
@@ -70,8 +74,8 @@ int warning_level = 0;
 #if WITH_DISPLAY
     void clearDisplay()
     {
-        dbgSerial.print("\033[2J");
-        dbgSerial.print("\033[3J");
+        dbgSerial->print("\033[2J");
+        dbgSerial->print("\033[3J");
     }
 
     void display_fxn(int level, const char *format, ...)
@@ -87,7 +91,7 @@ int warning_level = 0;
         #if USE_PROGMEM
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
-                dbgSerial.println(F("error - display progmem buffer overflow"));
+                dbgSerial->println(F("error - display progmem buffer overflow"));
                 return;
             }
             strcpy_P(display_buffer2,format);
@@ -95,17 +99,17 @@ int warning_level = 0;
         #else
             if (strlen(format) >= DISPLAY_BUFFER_SIZE)
             {
-                dbgSerial.println(F("error - display buffer overflow"));
+                dbgSerial->println(F("error - display buffer overflow"));
                 return;
             }
             vsprintf(display_buffer1,format,var);
         #endif
 
-        dbgSerial.print(PLATFORM_COLOR_STRING);
+        dbgSerial->print(PLATFORM_COLOR_STRING);
         #if WITH_INDENTS
             indent();
         #endif
-        dbgSerial.println(display_buffer1);
+        dbgSerial->println(display_buffer1);
     }
 #endif
 
@@ -124,7 +128,7 @@ int warning_level = 0;
         #if USE_PROGMEM
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
-                dbgSerial.println(F("error - warning progmem buffer overflow"));
+                dbgSerial->println(F("error - warning progmem buffer overflow"));
                 return;
             }
             strcpy_P(display_buffer2,format);
@@ -132,18 +136,18 @@ int warning_level = 0;
         #else
             if (strlen(format) >= DISPLAY_BUFFER_SIZE)
             {
-                dbgSerial.println(F("error - warning buffer overflow"));
+                dbgSerial->println(F("error - warning buffer overflow"));
                 return;
             }
             vsprintf(display_buffer1,format,var);
         #endif
 
-        dbgSerial.print(WARNING_COLOR_STRING);
+        dbgSerial->print(WARNING_COLOR_STRING);
         #if WITH_INDENTS
             indent();
         #endif
-        dbgSerial.print("WARNING - ");
-        dbgSerial.println(display_buffer1);
+        dbgSerial->print("WARNING - ");
+        dbgSerial->println(display_buffer1);
     }
 #endif
 
@@ -160,7 +164,7 @@ int warning_level = 0;
         #if USE_PROGMEM
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
-                dbgSerial.println(F("error - error progmem buffer overflow"));
+                dbgSerial->println(F("error - error progmem buffer overflow"));
                 return;
             }
             strcpy_P(display_buffer2,format);
@@ -168,15 +172,15 @@ int warning_level = 0;
         #else
             if (strlen(format) >= DISPLAY_BUFFER_SIZE)
             {
-                dbgSerial.println(F("error - error buffer overflow"));
+                dbgSerial->println(F("error - error buffer overflow"));
                 return;
             }
             vsprintf(display_buffer1,format,var);
         #endif
 
-        dbgSerial.print(ERROR_COLOR_STRING);
-        dbgSerial.print("ERROR - ");
-        dbgSerial.println(display_buffer1);
+        dbgSerial->print(ERROR_COLOR_STRING);
+        dbgSerial->print("ERROR - ");
+        dbgSerial->println(display_buffer1);
     }
 #endif
 
@@ -251,16 +255,16 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
     
     void init_my_debug()
     {
-        dbgSerial.begin(MY_BAUD_RATE);
+        dbgSerial->begin(MY_BAUD_RATE);
         checkMem();
     }
     
     void clearPutty()
     {
-        // dbgSerial.print("\033[1;1]f");
-        // dbgSerial.print("\033[1J");
-        dbgSerial.print("\033[2J");
-        dbgSerial.print("\033[3J");
+        // dbgSerial->print("\033[1;1]f");
+        // dbgSerial->print("\033[1J");
+        dbgSerial->print("\033[2J");
+        dbgSerial->print("\033[3J");
         
     }
 #endif
@@ -279,7 +283,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         {
             if (proc_level < 0)
             {
-                dbgSerial.println("WARNING: MISSING (unbalanced) proc_entry!!");
+                dbgSerial->println("WARNING: MISSING (unbalanced) proc_entry!!");
                 proc_level = 0;
             }
             int i = proc_level * 4;
@@ -315,11 +319,11 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             if (!len)
             {
                 strcpy(obuf," (0 bytes!!)");
-                dbgSerial.println(disp_bytes_buf);
+                dbgSerial->println(disp_bytes_buf);
                 return;
             }
 
-            // dbgSerial.println("its not just the call to dbgSerial.println");
+            // dbgSerial->println("its not just the call to dbgSerial->println");
             // return;
             
             int bnum = 0;
@@ -354,7 +358,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                 #endif
             }
             *obuf++ = 0;
-            dbgSerial.println(disp_bytes_buf);
+            dbgSerial->println(disp_bytes_buf);
         }
 
     #else      // display_bytes() on arduino
@@ -366,8 +370,8 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             if (!len)
             {
                 indent();
-                dbgSerial.print(label);
-                dbgSerial.println(" (0 bytes!!)");
+                dbgSerial->print(label);
+                dbgSerial->println(" (0 bytes!!)");
                 return;
             }
             
@@ -380,20 +384,20 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                     if (!bnum)
                     {
                         indent();
-                        dbgSerial.print(label);
-                        dbgSerial.print(" ");
+                        dbgSerial->print(label);
+                        dbgSerial->print(" ");
                     }
                     else
                     {
-                        dbgSerial.println();
+                        dbgSerial->println();
                         indent();
-                        dbgSerial.print("    ");
+                        dbgSerial->print("    ");
                     }
                 }
                 sprintf(tbuf,"%02x ",buf[bnum++]);
-                dbgSerial.print(tbuf);
+                dbgSerial->print(tbuf);
             }
-            dbgSerial.println();
+            dbgSerial->println();
         }
         
     #endif      // arduino version of display_bytes
@@ -409,7 +413,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         if (!len)
         {
             indent();
-            dbgSerial.println("0x000000 (0 bytes!!)");
+            dbgSerial->println("0x000000 (0 bytes!!)");
             return;
         }
         
@@ -424,26 +428,26 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             {
                 if (bnum)
                 {
-                    dbgSerial.print("    ");
-                    dbgSerial.println(char_buf);
+                    dbgSerial->print("    ");
+                    dbgSerial->println(char_buf);
                     memset(char_buf,0,17);
                 }
                 indent();
                 sprintf(tbuf,"    0x%04x: ",addr + bnum);
-                dbgSerial.print(tbuf);
+                dbgSerial->print(tbuf);
             }
 
             uint8_t c = buf[bnum];
             sprintf(tbuf,"%02x ",c);
-            dbgSerial.print(tbuf);
+            dbgSerial->print(tbuf);
             char_buf[bnum % 16] = (c >= 32) && (c < 128) ? ((char) c) : '.';
             bnum++;
         }
         if (bnum)
         {
-            while (bnum % 16 != 0) { dbgSerial.print("   "); bnum++; }
-            dbgSerial.print("    ");
-            dbgSerial.println(char_buf);
+            while (bnum % 16 != 0) { dbgSerial->print("   "); bnum++; }
+            dbgSerial->print("    ");
+            dbgSerial->println(char_buf);
         }
     }
     
@@ -513,15 +517,15 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             int free_mem = freeMemory();
             if (free_mem < MEMORY_LIMIT_WARNING)
             {
-                dbgSerial.print("MEMORY WARNING!! free=");
-                dbgSerial.println(free_mem);
+                dbgSerial->print("MEMORY WARNING!! free=");
+                dbgSerial->println(free_mem);
             }
         }
         
         void dbgMem()
         {
-            dbgSerial.print("DEBUG MEMORY = ");
-            dbgSerial.println(freeMemory());
+            dbgSerial->print("DEBUG MEMORY = ");
+            dbgSerial->println(freeMemory());
         }
         
     }   // extern "C"

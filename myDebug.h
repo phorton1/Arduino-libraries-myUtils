@@ -19,21 +19,9 @@
 
 #ifdef CORE_TEENSY
     #undef USE_MEMORY_CHECK
-
-    // For Teensy, if the device is NOT configured for a serial port,
-    // we turn off the calls to display() etc ... we do this based on
-    // the absence of one of two defines USB_SERIAL or USB_MIDI_SERIAL
-
-    #if 0 && !defined(USB_SERIAL) && !defined(USB_MIDI_SERIAL)
-        #undef WITH_INDENTS  
-        #undef WITH_DISPLAY  
-        #undef WITH_WARNINGS 
-        #undef WITH_ERRORS   
-    #else
-        #define dbgSerial     Serial
-    #endif
+    extern Stream *dbgSerial;
 #else
-    #define dbgSerial     Serial
+    #define dbgSerial     (&Serial)
 #endif
 
 
