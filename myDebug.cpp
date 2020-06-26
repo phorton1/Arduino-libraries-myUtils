@@ -13,15 +13,15 @@ int warning_level = 0;
 
 // string is "\033[%d;" with following
 // ansi color codes fore back
-//  
-//     Black 	        30 	40 
-//     Red 	            31 	41 
-//     Green 	        32 	42 
+//
+//     Black 	        30 	40
+//     Red 	            31 	41
+//     Green 	        32 	42
 //     Yellow 	        33 	43   brown
-//     Blue 	        34 	44 
-//     Magenta 	        35 	45 
-//     Cyan 	        36 	46 
-//     White 	        37 	47 
+//     Blue 	        34 	44
+//     Magenta 	        35 	45
+//     Cyan 	        36 	46
+//     White 	        37 	47
 //     Bright Black 	90 	100
 //     Bright Red 	    91 	101
 //     Bright Green 	92 	102
@@ -42,9 +42,9 @@ int warning_level = 0;
 
 #ifdef CORE_TEENSY
     #define DISPLAY_BUFFER_SIZE     255
-    #define PLATFORM_COLOR_STRING   "\033[92m"      // bright green    
-    #define WARNING_COLOR_STRING    "\033[93m"       // yellow   
-    #define ERROR_COLOR_STRING      "\033[91m"       // red   
+    #define PLATFORM_COLOR_STRING   "\033[92m"      // bright green
+    #define WARNING_COLOR_STRING    "\033[93m"       // yellow
+    #define ERROR_COLOR_STRING      "\033[91m"       // red
 #else
     #define DISPLAY_BUFFER_SIZE     80
     #define PLATFORM_COLOR_STRING   "\033[96m"       // bright cyan
@@ -63,7 +63,7 @@ int warning_level = 0;
 
 #if WITH_INDENTS
     int proc_level = 0;
-    void indent()
+    void indent()   // only called if dbgSerial
     {
         for (int i=0; i<proc_level; i++)
             dbgSerial->print("    ");
@@ -74,20 +74,26 @@ int warning_level = 0;
 #if WITH_DISPLAY
     void clearDisplay()
     {
-        dbgSerial->print("\033[2J");
-        dbgSerial->print("\033[3J");
+        if (dbgSerial)
+        {
+            dbgSerial->print("\033[2J");
+            dbgSerial->print("\033[3J");
+        }
     }
 
     void display_fxn(int level, const char *format, ...)
     {
+        if (!dbgSerial)
+            return;
+
         checkMem();
-        
+
         if (level > debug_level)
             return;
-        
+
         va_list var;
         va_start(var, format);
-        
+
         #if USE_PROGMEM
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
@@ -117,11 +123,14 @@ int warning_level = 0;
 #if WITH_WARNINGS
     void warning_fxn(int level, const char *format, ...)
     {
+        if (!dbgSerial)
+            return;
+
         checkMem();
 
         if (level > warning_level)
             return;
-        
+
         va_list var;
         va_start(var, format);
 
@@ -156,11 +165,14 @@ int warning_level = 0;
 #if WITH_ERRORS
     void error_fxn(const char *format, ...)
     {
+        if (!dbgSerial)
+            return;
+
         checkMem();
 
         va_list var;
         va_start(var, format);
-        
+
         #if USE_PROGMEM
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
@@ -192,7 +204,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
     // available if !MY_DEBUG
 {
     checkMem();
-    
+
     if (digitalRead(pin))
     {
         if (*state)
@@ -210,76 +222,16 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
 
 
-
-
-#if OLD_STUFF
-
-    //-------------------------
-    // hex display routines
-    //-------------------------
-    // use 4 buffers so they can be
-    // called from my display macros
-    
-    #define NUM_HEX_BUFS  4
-    char hex_buf[NUM_HEX_BUFS][10];
-    int next_hex_buf = 0;
-    
-    char *hex2(uint8_t v)
-    {
-        int bnum = next_hex_buf++;
-        sprintf(hex_buf[bnum],"0x%02x",v);
-        if (next_hex_buf>=NUM_HEX_BUFS) next_hex_buf=0;
-        return hex_buf[bnum];
-    }
-    
-    char *hex4(uint16_t v)
-    {
-        int bnum = next_hex_buf++;
-        sprintf(hex_buf[bnum],"0x%04x",v);
-        if (next_hex_buf>=NUM_HEX_BUFS) next_hex_buf=0;
-        return hex_buf[bnum];
-    }
-    
-    char *hex8(uint32_t v)
-    {
-        int bnum = next_hex_buf++;
-        sprintf(hex_buf[bnum],"0x%08lx",v);
-        if (next_hex_buf>=NUM_HEX_BUFS) next_hex_buf=0;
-        return hex_buf[bnum];
-    }
-    
-    
-    //-------------------------
-    // rest of API
-    //-------------------------
-    
-    void init_my_debug()
-    {
-        dbgSerial->begin(MY_BAUD_RATE);
-        checkMem();
-    }
-    
-    void clearPutty()
-    {
-        // dbgSerial->print("\033[1;1]f");
-        // dbgSerial->print("\033[1J");
-        dbgSerial->print("\033[2J");
-        dbgSerial->print("\033[3J");
-        
-    }
-#endif
-
-
 #if WITH_DISPLAY_BYTES
 
     #ifdef CORE_TEENSY
-    
+
         // optimized version of display_bytes (speed vs memory)
-        
+
         #define MAX_DISPLAY_BYTES    2048
         char disp_bytes_buf[MAX_DISPLAY_BYTES];
 
-        char *indent_buf(char *obuf)
+        char *indent_buf(char *obuf)            // only called if dbgSerial != 0
         {
             if (proc_level < 0)
             {
@@ -293,17 +245,19 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
         void display_bytes(int level, const char *label, uint8_t *buf, int len)
         {
+            if (!dbgSerial) return;
             if (level > debug_level) return;
             display_bytes_ep(level,0,label,buf,len);
         }
 
-                
+
         void display_bytes_ep(int level, uint8_t ep, const char *label, uint8_t *buf, int len)
         {
+            if (!dbgSerial) return;
             if (level > debug_level) return;
             char *obuf = disp_bytes_buf;
             obuf = indent_buf(obuf);
-            
+
             uint8_t space_len = 4;
             if (ep)
             {
@@ -315,7 +269,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                 *obuf++ = *label++;
             }
             *obuf++ = ' ';
-            
+
             if (!len)
             {
                 strcpy(obuf," (0 bytes!!)");
@@ -325,7 +279,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
             // dbgSerial->println("its not just the call to dbgSerial->println");
             // return;
-            
+
             int bnum = 0;
             while (bnum < len && bnum < MAX_DISPLAY_BYTES-8)
             {
@@ -342,16 +296,16 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                         }
                     }
                 }
-                
+
                 #if 1
                     uint8_t byte = buf[bnum++];
                     uint8_t nibble = byte >> 4;
                     byte &= 0x0f;
-                    
+
                     *obuf++ = nibble > 9 ? ('a' + nibble-10) : ('0' + nibble);
                     *obuf++ = byte > 9 ? ('a' + byte-10) : ('0' + byte);
                     *obuf++ = ' ';
-                    
+
                 #else
                     sprintf(obuf,"%02x ",buf[bnum++]);
                     obuf += 3;
@@ -362,10 +316,11 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         }
 
     #else      // display_bytes() on arduino
-    
+
         void display_bytes(int level, const char *label, uint8_t *buf, int len)
         {
-            checkMem();    
+            if (!dbgSerial) return;
+            checkMem();
             if (level > debug_level) return;
             if (!len)
             {
@@ -374,7 +329,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                 dbgSerial->println(" (0 bytes!!)");
                 return;
             }
-            
+
             char tbuf[6];
             int bnum = 0;
             while (bnum < len)
@@ -399,7 +354,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             }
             dbgSerial->println();
         }
-        
+
     #endif      // arduino version of display_bytes
 #endif // WITH_DISPLAY_BYTES
 
@@ -408,7 +363,8 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
     void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len)
     {
-        checkMem();    
+        if (!dbgSerial) return;
+        checkMem();
         if (level > debug_level) return;
         if (!len)
         {
@@ -416,11 +372,11 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             dbgSerial->println("0x000000 (0 bytes!!)");
             return;
         }
-        
+
         char tbuf[20];
         char char_buf[17];
         memset(char_buf,0,17);
-        
+
         int bnum = 0;
         while (bnum < len)
         {
@@ -450,38 +406,38 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             dbgSerial->println(char_buf);
         }
     }
-    
+
 #endif  // WITH_DISPLAY_BYTES_LONG
 
 
-    
+
 //------------------------------------------------------
 // memory debugging
 //------------------------------------------------------
 
 #if USE_MEMORY_CHECK
     extern "C" {
-    
+
         // code copied from Arduino Playground
 
         extern unsigned int __heap_start;
         extern void *__brkval;
-        
-        
+
+
         // The free list structure as maintained by the
         // avr-libc memory allocation routines.
-        
+
         struct __freelist {
             size_t sz;
             struct __freelist *nx;
         };
-        
+
         // The head of the free list structure
-        
+
         extern struct __freelist *__flp;
-        
-        
-        // Calculates the size of the free list 
+
+
+        // Calculates the size of the free list
         int freeListSize()
         {
             struct __freelist* current;
@@ -489,12 +445,12 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             for (current = __flp; current; current = current->nx)
             {
                 total += 2;
-                    // Add two bytes for the memory block's header  
+                    // Add two bytes for the memory block's header
                 total += (int) current->sz;
             }
             return total;
         }
-        
+
         int freeMemory()
         {
             int free_memory;
@@ -509,11 +465,12 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             }
             return free_memory;
         }
-                
+
         // my code
-        
+
         void checkMem()
         {
+            if (!dbgSerial) return;
             int free_mem = freeMemory();
             if (free_mem < MEMORY_LIMIT_WARNING)
             {
@@ -521,13 +478,14 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
                 dbgSerial->println(free_mem);
             }
         }
-        
+
         void dbgMem()
         {
+            if (!dbgSerial) return;
             dbgSerial->print("DEBUG MEMORY = ");
             dbgSerial->println(freeMemory());
         }
-        
+
     }   // extern "C"
-    
+
 #endif // USE_MEMORY_CHECK
