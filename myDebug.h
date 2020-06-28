@@ -37,7 +37,7 @@
     #define WITH_DISPLAY_BYTES_EP    0
     #define WITH_DISPLAY_BYTES_LONG  0
 #endif
-    
+
 
 
 //---------------------------------------------------
@@ -92,7 +92,7 @@
 
 
 
-#if WITH_DISPLAY_BYTES    
+#if WITH_DISPLAY_BYTES
     extern void display_bytes(int level, const char *label, uint8_t *buf, int len);
     #ifdef CORE_TEENSY
         // display_bytes_ep() only available on teensy
@@ -108,16 +108,17 @@
 
 
 
-    
-#if WITH_DISPLAY_BYTES_LONG    
-    extern void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len);
+
+#if WITH_DISPLAY_BYTES_LONG
+    extern void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len, Stream *use_stream=0);
 #else
     #define display_bytes_long(l,a,b,z)
+    #define display_bytes_long(l,a,b,z,s)
 #endif
 
 
 //---------------------------------------------------
-// these are always defined 
+// these are always defined
 //---------------------------------------------------
 
 extern int debug_level;
@@ -131,19 +132,19 @@ extern uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
 
 #if USE_MEMORY_CHECK
     extern "C" {
-        
+
         #define MEMORY_LIMIT_WARNING 256
-    
+
         void checkMem();
             // call this at the top of a routine and if there is less than
             // MEMORY_LIMIT_WARNING of bytes of free memory, it will print
             // a warning to the dbgSerial port.  Note that this is called
             // in all debug routines, so merely calling display() in your
             // routine *should* roughly check the memory situation
-        
+
         void dbgMem();
             // call this and it will print out the amount of free memory
-            // to the dbgSerial port    
+            // to the dbgSerial port
     }
 #else
     #define checkMem()

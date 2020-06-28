@@ -63,10 +63,14 @@ int warning_level = 0;
 
 #if WITH_INDENTS
     int proc_level = 0;
-    void indent()   // only called if dbgSerial
+    void indent(Stream *out_stream=0)
     {
+        if (!out_stream)
+            out_stream = dbgSerial;
+        if (!out_stream)
+            return;
         for (int i=0; i<proc_level; i++)
-            dbgSerial->print("    ");
+            out_stream->print("    ");
     }
 #endif
 
@@ -361,15 +365,19 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
 #if WITH_DISPLAY_BYTES_LONG
 
-    void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len)
+    void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len, Stream *use_stream)
     {
-        if (!dbgSerial) return;
-        checkMem();
+        if (!use_stream)
+            use_stream = dbgSerial;
+        if (!use_stream) return;
+
+        // checkMem();
+
         if (level > debug_level) return;
         if (!len)
         {
-            indent();
-            dbgSerial->println("0x000000 (0 bytes!!)");
+            indent(use_stream);
+            use_stream->println("0x000000 (0 bytes!!)");
             return;
         }
 
@@ -384,26 +392,26 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             {
                 if (bnum)
                 {
-                    dbgSerial->print("    ");
-                    dbgSerial->println(char_buf);
+                    use_stream->print("    ");
+                    use_stream->println(char_buf);
                     memset(char_buf,0,17);
                 }
                 indent();
                 sprintf(tbuf,"    0x%04x: ",addr + bnum);
-                dbgSerial->print(tbuf);
+                use_stream->print(tbuf);
             }
 
             uint8_t c = buf[bnum];
             sprintf(tbuf,"%02x ",c);
-            dbgSerial->print(tbuf);
+            use_stream->print(tbuf);
             char_buf[bnum % 16] = (c >= 32) && (c < 128) ? ((char) c) : '.';
             bnum++;
         }
         if (bnum)
         {
             while (bnum % 16 != 0) { dbgSerial->print("   "); bnum++; }
-            dbgSerial->print("    ");
-            dbgSerial->println(char_buf);
+            use_stream->print("    ");
+            use_stream->println(char_buf);
         }
     }
 
