@@ -48,7 +48,7 @@ int warning_level = 0;
 #else
     #define DISPLAY_BUFFER_SIZE     80
     #define PLATFORM_COLOR_STRING   "\033[96m"       // bright cyan
-    #define WARNING_COLOR_STRING    "\033[33m"       // brown
+    #define WARNING_COLOR_STRING    "\033[93m"       // yellow
     #define ERROR_COLOR_STRING      "\033[95m"       // magenta
 #endif
 
