@@ -100,6 +100,7 @@ void ampMeter::task()
         {
             serial2_started = true;
             Serial2.begin(115200);
+            display(0,"ampMeter started Serial2",0);
             Serial2.println("ampMeter started Serial2");
         }
     #endif
@@ -151,7 +152,7 @@ void ampMeter::task()
             }
 
             #if SHOW_SERIAL2
-                Serial2.print("0,100,");
+                Serial2.print("0,250,");
                 Serial2.print(milliAmps());
                 Serial2.print(",");
                 Serial2.println(averageMilliAmps());
