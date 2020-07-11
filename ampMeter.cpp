@@ -57,7 +57,10 @@
 
 #if SHOW_SERIAL2
     #include <SoftwareSerial.h>
-    SoftwareSerial Serial2(2, 3); // RX, TX
+    SoftwareSerial mySerial2(2, 4); // RX, TX
+        // normaly pins 2 and 3, pin 3 is reserved by the Arduino pedal
+        // program for the "one wire" recieve interrupt pin, so pin 4
+        // is used instead for this secondary monitoring feature.
     bool serial2_started = false;
 #endif
 
@@ -99,9 +102,9 @@ void ampMeter::task()
         if (!serial2_started)
         {
             serial2_started = true;
-            Serial2.begin(115200);
-            display(0,"ampMeter started Serial2",0);
-            Serial2.println("ampMeter started Serial2");
+            mySerial2.begin(115200);
+            display(0,"ampMeter started mySerial2",0);
+            mySerial2.println("ampMeter started mySerial2");
         }
     #endif
 
@@ -152,10 +155,10 @@ void ampMeter::task()
             }
 
             #if SHOW_SERIAL2
-                Serial2.print("0,250,");
-                Serial2.print(milliAmps());
-                Serial2.print(",");
-                Serial2.println(averageMilliAmps());
+                mySerial2.print("0,250,");
+                mySerial2.print(milliAmps());
+                mySerial2.print(",");
+                mySerial2.println(averageMilliAmps());
             #endif
 
         }
