@@ -7,14 +7,14 @@
 
 // inputs
 
-#define SENSE_RPI_RUN      3      // A9 sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
+#define SENSE_RPI_RUN      11      // A9 sense rpi RUN (REBBOOT) pin, HIGH == rpi has voltage
 #define SENSE_RPI_READY    4       // sense rpi GPIO25, HIGH == my program has initialized
 
 // outputs
 
-#define LED_RPI_RUN        12      // show state of RPI_RUN sense
-#define LED_RPI_READY      11      // show state of RPI_READY sense
-#define PIN_PI_REBOOT      2      // (2 for rpiZero) HIGH==REBOOT
+#define LED_RPI_RUN        15      // show state of RPI_RUN sense
+#define LED_RPI_READY      14      // show state of RPI_READY sense
+#define PIN_PI_REBOOT      12      // (2 for rpiZero) HIGH==REBOOT
     // PIN_PI_REBOOT brings the rpi RUN line to ground via
     // the base of a transistor, causing the rPi to reboot.
 
@@ -32,17 +32,32 @@ rpiSerialMonitor::rpiSerialMonitor(uint8_t start_command, uint8_t num_commands)
     m_num_commands = num_commands;
     m_key_pressed = 0;
     m_key_timer = 0;
+}
 
-    pinMode(LED_RPI_RUN,OUTPUT);
-    pinMode(LED_RPI_READY,OUTPUT);
+
+void rpiSerialMonitor::init()
+{
     pinMode(PIN_PI_REBOOT,OUTPUT);
+    digitalWrite(PIN_PI_REBOOT,0);
 
     pinMode(SENSE_RPI_RUN,INPUT_PULLDOWN);
     pinMode(SENSE_RPI_READY,INPUT_PULLDOWN);
-    
+
+    pinMode(LED_RPI_RUN,OUTPUT);
+    pinMode(LED_RPI_READY,OUTPUT);
+
+    #if 0
+        for (int i=0; i<31; i++)
+        {
+            display(0,"flashing leds %d",i);
+            digitalWrite(LED_RPI_RUN,i % 2);
+            digitalWrite(LED_RPI_READY,i % 2);
+            delay(500);
+        }
+    #endif
+
     digitalWrite(LED_RPI_RUN,0);
     digitalWrite(LED_RPI_READY,1);
-    digitalWrite(PIN_PI_REBOOT,0);
 }
 
 
@@ -61,7 +76,7 @@ void rpiSerialMonitor::rebootPi()
     digitalWrite(PIN_PI_REBOOT,0);
 }
 
-    
+
 uint8_t rpiSerialMonitor::task()
 {
     if (digitalRead(SENSE_RPI_RUN) != rpi_running)
@@ -76,8 +91,8 @@ uint8_t rpiSerialMonitor::task()
         digitalWrite(LED_RPI_READY,rpi_ready);
         display(0,"rpi %s",(rpi_ready ? "READY" : "NOT READY"));
     }
-    
-    
+
+
     if (Serial.available())
     {
         int c = Serial.read();
@@ -131,20 +146,14 @@ uint8_t rpiSerialMonitor::task()
             }
         }
     #endif
-        
-    
+
+
     if (Serial1.available())
     {
         Serial.write(Serial1.read());
     }
-    
+
     return 0;
 }
 
 #endif // CORE_TEENSY
-
-
-
-
-
-
