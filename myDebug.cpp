@@ -41,12 +41,10 @@ int warning_level = 0;
 
 
 #ifdef CORE_TEENSY
-    #define DISPLAY_BUFFER_SIZE     255
     #define PLATFORM_COLOR_STRING   "\033[92m"      // bright green
     #define WARNING_COLOR_STRING    "\033[93m"       // yellow
     #define ERROR_COLOR_STRING      "\033[91m"       // red
 #else
-    #define DISPLAY_BUFFER_SIZE     80
     #define PLATFORM_COLOR_STRING   "\033[96m"       // bright cyan
     #define WARNING_COLOR_STRING    "\033[93m"       // yellow
     #define ERROR_COLOR_STRING      "\033[95m"       // magenta

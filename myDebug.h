@@ -107,13 +107,28 @@
 #endif
 
 
-
-
 #if WITH_DISPLAY_BYTES_LONG
     extern void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len, Stream *use_stream=0);
 #else
     #define display_bytes_long(l,a,b,z)
     #define display_bytes_long(l,a,b,z,s)
+#endif
+
+
+// Extern buffers for public use
+
+#ifdef CORE_TEENSY
+    #define DISPLAY_BUFFER_SIZE     255
+#else
+    #define DISPLAY_BUFFER_SIZE     80
+#endif
+
+
+#if WITH_DISPLAY || WITH_WARNINGS || WITH_ERRORS
+    extern char display_buffer1[DISPLAY_BUFFER_SIZE];
+    #if USE_PROGMEM
+        extern char display_buffer2[DISPLAY_BUFFER_SIZE];
+    #endif
 #endif
 
 
