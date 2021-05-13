@@ -8,6 +8,9 @@
     Stream *dbgSerial = &Serial;
 #endif
 
+Stream *extraSerial = 0;
+
+
 int debug_level = 0;
 int warning_level = 0;
 
@@ -118,6 +121,10 @@ int warning_level = 0;
             indent();
         #endif
         dbgSerial->println(display_buffer1);
+        
+        if (extraSerial)
+            extraSerial->println(display_buffer1);
+        
     }
 #endif
 
@@ -159,6 +166,13 @@ int warning_level = 0;
         #endif
         dbgSerial->print("WARNING - ");
         dbgSerial->println(display_buffer1);
+        
+        if (extraSerial)
+        {
+            extraSerial->print("WARNING - ");
+            extraSerial->println(display_buffer1);
+        }
+        
     }
 #endif
 
@@ -195,6 +209,13 @@ int warning_level = 0;
         dbgSerial->print(ERROR_COLOR_STRING);
         dbgSerial->print("ERROR - ");
         dbgSerial->println(display_buffer1);
+
+        if (extraSerial)
+        {
+            extraSerial->print("ERROR - ");
+            extraSerial->println(display_buffer1);
+        }
+        
     }
 #endif
 

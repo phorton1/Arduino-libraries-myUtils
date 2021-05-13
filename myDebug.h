@@ -12,7 +12,7 @@
 #define WITH_WARNINGS       1
 #define WITH_ERRORS         1
 #define USE_PROGMEM         1
-#define USE_MEMORY_CHECK    1
+#define USE_MEMORY_CHECK    0
 
 // #include <SoftwareSerial.h> and change below if you want
 // Change below on Teensy to Serial1 if you want
@@ -24,6 +24,7 @@
     #define dbgSerial     (&Serial)
 #endif
 
+extern Stream *extraSerial;
 
 
 #if WITH_DISPLAY
