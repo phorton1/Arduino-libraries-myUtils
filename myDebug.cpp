@@ -4,7 +4,7 @@
 
 #include "myDebug.h"
 
-#ifdef CORE_TEENSY
+#if defined(CORE_TEENSY) || defined(ESP32)
     Stream *dbgSerial = &Serial;
 #endif
 
@@ -43,7 +43,7 @@ int warning_level = 0;
     // this close to the full buffer size.
 
 
-#ifdef CORE_TEENSY
+#if defined(CORE_TEENSY) || defined(ESP32)
     #define PLATFORM_COLOR_STRING   "\033[92m"      // bright green
     #define WARNING_COLOR_STRING    "\033[93m"       // yellow
     #define ERROR_COLOR_STRING      "\033[91m"       // red
@@ -77,6 +77,12 @@ int warning_level = 0;
 
 
 #if WITH_DISPLAY
+
+    bool inhibit_cr = false;
+
+    void inhibitCr() { inhibit_cr = true; }
+
+
     void clearDisplay()
     {
         if (dbgSerial)
@@ -120,11 +126,16 @@ int warning_level = 0;
         #if WITH_INDENTS
             indent();
         #endif
-        dbgSerial->println(display_buffer1);
-        
+
+        dbgSerial->print(display_buffer1);
+        if (inhibit_cr)
+            inhibit_cr = false;
+        else
+            dbgSerial->println();
+
         if (extraSerial)
             extraSerial->println(display_buffer1);
-        
+
     }
 #endif
 
@@ -166,13 +177,13 @@ int warning_level = 0;
         #endif
         dbgSerial->print("WARNING - ");
         dbgSerial->println(display_buffer1);
-        
+
         if (extraSerial)
         {
             extraSerial->print("WARNING - ");
             extraSerial->println(display_buffer1);
         }
-        
+
     }
 #endif
 
@@ -215,39 +226,40 @@ int warning_level = 0;
             extraSerial->print("ERROR - ");
             extraSerial->println(display_buffer1);
         }
-        
+
     }
 #endif
 
 
 
-    // defined even if MY_DEBUG is turned off
+// defined on Arduino/Teensy even if MY_DEBUG is turned off
 
-uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
-    // available if !MY_DEBUG
-{
-    checkMem();
-
-    if (digitalRead(pin))
+#ifndef ESP32
+    uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
+        // available if !MY_DEBUG
     {
-        if (*state)
+        checkMem();
+
+        if (digitalRead(pin))
         {
-            *state = 0;
+            if (*state)
+            {
+                *state = 0;
+            }
         }
+        else if (!*state)
+        {
+            *state = 1;
+            return 1;
+        }
+        return 0;
     }
-    else if (!*state)
-    {
-        *state = 1;
-        return 1;
-    }
-    return 0;
-}
-
+#endif
 
 
 #if WITH_DISPLAY_BYTES
 
-    #ifdef CORE_TEENSY
+    #if defined(CORE_TEENSY) || defined(ESP32)
 
         // optimized version of display_bytes (speed vs memory)
 
@@ -266,7 +278,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
             return obuf;
         }
 
-        void display_bytes(int level, const char *label, uint8_t *buf, int len)
+        void display_bytes(int level, const char *label, const uint8_t *buf, int len)
         {
             if (!dbgSerial) return;
             if (level > debug_level) return;
@@ -274,7 +286,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
         }
 
 
-        void display_bytes_ep(int level, uint8_t ep, const char *label, uint8_t *buf, int len)
+        void display_bytes_ep(int level, uint8_t ep, const char *label, const uint8_t *buf, int len)
         {
             if (!dbgSerial) return;
             if (level > debug_level) return;
@@ -340,7 +352,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
     #else      // display_bytes() on arduino
 
-        void display_bytes(int level, const char *label, uint8_t *buf, int len)
+        void display_bytes(int level, const char *label, const uint8_t *buf, int len)
         {
             if (!dbgSerial) return;
             checkMem();
@@ -384,7 +396,7 @@ uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
 
 #if WITH_DISPLAY_BYTES_LONG
 
-    void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len, Stream *use_stream)
+    void display_bytes_long(int level, uint16_t addr, const uint8_t *buf, int len, Stream *use_stream)
     {
         if (!use_stream)
             use_stream = dbgSerial;

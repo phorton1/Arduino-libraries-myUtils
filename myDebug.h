@@ -11,13 +11,18 @@
 #define WITH_DISPLAY        1
 #define WITH_WARNINGS       1
 #define WITH_ERRORS         1
-#define USE_PROGMEM         1
 #define USE_MEMORY_CHECK    0
+
+#ifdef ESP32
+#define USE_PROGMEM         1
+#else
+#define USE_PROGMEM         0
+#endif
 
 // #include <SoftwareSerial.h> and change below if you want
 // Change below on Teensy to Serial1 if you want
 
-#ifdef CORE_TEENSY
+#if defined(CORE_TEENSY) || defined(ESP32)
     #undef USE_MEMORY_CHECK
     extern Stream *dbgSerial;
 #else
@@ -38,6 +43,8 @@ extern Stream *extraSerial;
     #define WITH_DISPLAY_BYTES_EP    0
     #define WITH_DISPLAY_BYTES_LONG  0
 #endif
+
+
 
 
 
@@ -62,6 +69,7 @@ extern Stream *extraSerial;
     #endif
     extern void display_fxn(int level, const char *format, ...);
     extern void clearDisplay();
+    extern void inhibitCr();
 #else
     #define display(l,f,...)
     #define clearDisplay()
@@ -94,13 +102,13 @@ extern Stream *extraSerial;
 
 
 #if WITH_DISPLAY_BYTES
-    extern void display_bytes(int level, const char *label, uint8_t *buf, int len);
-    #ifdef CORE_TEENSY
+    extern void display_bytes(int level, const char *label, const uint8_t *buf, int len);
+    #if defined(CORE_TEENSY) || defined(ESP32)
         // display_bytes_ep() only available on teensy
-        extern void display_bytes_ep(int level, uint8_t ep, const char *label, uint8_t *buf, int len);
+        extern void display_bytes_ep(int level, const uint8_t ep, const char *label, const uint8_t *buf, int len);
     #endif
 #else
-    #ifdef CORE_TEENSY
+    #if defined(CORE_TEENSY) || defined(ESP32)
         // and we enforce it by not defining a null method otherwise
         #define display_bytes_ep(l,a,b,x,z)
     #endif
@@ -109,7 +117,7 @@ extern Stream *extraSerial;
 
 
 #if WITH_DISPLAY_BYTES_LONG
-    extern void display_bytes_long(int level, uint16_t addr, uint8_t *buf, int len, Stream *use_stream=0);
+    extern void display_bytes_long(int level, uint16_t addr, const uint8_t *buf, int len, Stream *use_stream=0);
 #else
     #define display_bytes_long(l,a,b,z)
     #define display_bytes_long(l,a,b,z,s)
@@ -118,7 +126,7 @@ extern Stream *extraSerial;
 
 // Extern buffers for public use
 
-#ifdef CORE_TEENSY
+#if defined(CORE_TEENSY) || defined(ESP32)
     #define DISPLAY_BUFFER_SIZE     255
 #else
     #define DISPLAY_BUFFER_SIZE     80
@@ -139,7 +147,11 @@ extern Stream *extraSerial;
 
 extern int debug_level;
 extern int warning_level;
-extern uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
+
+#ifndef ESP32
+    // defined on Arduino/Teensy even if MY_DEBUG is turned off
+    extern uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
+#endif
 
 
 //----------------------------------------
