@@ -13,10 +13,10 @@
 #define WITH_ERRORS         1
 #define USE_MEMORY_CHECK    0
 
-#ifdef ESP32
-#define USE_PROGMEM         1
+#if defined(CORE_TEENSY) || defined(ESP32)
+    #define USE_PROGMEM         0
 #else
-#define USE_PROGMEM         0
+    #define USE_PROGMEM         1
 #endif
 
 // #include <SoftwareSerial.h> and change below if you want
