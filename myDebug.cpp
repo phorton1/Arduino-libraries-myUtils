@@ -102,6 +102,10 @@ int warning_level = 0;
         if (level > debug_level)
             return;
 
+        #if defined(CORE_TEENSY)
+            delay(2);
+        #endif
+
         va_list var;
         va_start(var, format);
 
