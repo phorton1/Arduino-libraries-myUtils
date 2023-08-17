@@ -8,6 +8,7 @@
 
 
 #define WITH_INDENTS        1
+#define WITH_INDENT_CHECKS  0
 #define WITH_DISPLAY        1
 #define WITH_WARNINGS       1
 #define WITH_ERRORS         1
@@ -53,9 +54,14 @@ extern Stream *extraSerial;
 //---------------------------------------------------
 
 #if WITH_INDENTS
-    #define proc_entry()            proc_level++
-    #define proc_leave()            proc_level--
-    extern int proc_level;
+	extern int proc_level;
+	#if WITH_INDENT_CHECKS
+		#define proc_entry()	proc_level++;  int local_pl=proc_level
+		#define proc_leave()	if (local_pl != proc_level) dbgSerial->print("<<<<<<<<"); proc_level--
+	#else
+		#define proc_entry()    proc_level++
+		#define proc_leave()    proc_level--
+    #endif
 #else
     #define proc_entry()
     #define proc_leave()
