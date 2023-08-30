@@ -76,7 +76,23 @@ extern Stream *extraSerial;
     extern void display_fxn(int level, const char *format, ...);
     extern void clearDisplay();
     extern void inhibitCr();
+
+	#if WITH_INDENTS
+		#if USE_PROGMEM
+			#define display_level(d,l,f,...)	{ int save = proc_level; proc_level=l; display_fxn(d,PSTR(f),__VA_ARGS__); proc_level=save; }
+		#else
+			#define display_level(d,l,f,...)	{ int save = proc_level; proc_level=l; display_fxn(d,f,__VA_ARGS__); proc_level=save; }
+		#endif
+	#else
+		#if USE_PROGMEM
+			#define display_level(d,l,f,...)        display_fxn(d,PSTR(f),__VA_ARGS__)
+		#else
+			#define display_level(d,l,f,...)        display_fxn(dl,f,__VA_ARGS__)
+		#endif
+	#endif
+
 #else
+	#define display_level(d,l,f,...)
     #define display(l,f,...)
     #define clearDisplay()
 #endif
