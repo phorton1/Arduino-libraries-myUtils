@@ -1,11 +1,25 @@
 //------------------------------------------
 // button and expression pedal routines
 //------------------------------------------
+// ESP32 and Teensy provide crude re-entrancy protection
 
 #include "myDebug.h"
 
 #if defined(CORE_TEENSY) || defined(ESP32)
     Stream *dbgSerial = &Serial;
+    volatile bool in_display = 0;
+    static void waitSem()
+    {
+        while (in_display) {delay(1);}
+        in_display = 1;
+    }
+    static void releaseSem()
+    {
+        in_display = 0;
+    }
+#else
+    #define waitSem()
+    #define releaseSem()
 #endif
 
 Stream *extraSerial = 0;
@@ -102,6 +116,8 @@ int warning_level = 0;
         if (level > debug_level)
             return;
 
+        waitSem();
+
         #if defined(CORE_TEENSY)
             delay(2);
         #endif
@@ -113,6 +129,7 @@ int warning_level = 0;
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
                 dbgSerial->println(F("error - display progmem buffer overflow"));
+                releaseSem();
                 return;
             }
             strcpy_P(display_buffer2,format);
@@ -121,6 +138,7 @@ int warning_level = 0;
             if (strlen(format) >= DISPLAY_BUFFER_SIZE)
             {
                 dbgSerial->println(F("error - display buffer overflow"));
+                releaseSem();
                 return;
             }
             vsprintf(display_buffer1,format,var);
@@ -140,6 +158,7 @@ int warning_level = 0;
         if (extraSerial)
             extraSerial->println(display_buffer1);
 
+        releaseSem();
     }
 #endif
 
@@ -155,6 +174,8 @@ int warning_level = 0;
         if (level > warning_level)
             return;
 
+        waitSem();
+
         va_list var;
         va_start(var, format);
 
@@ -162,6 +183,7 @@ int warning_level = 0;
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
                 dbgSerial->println(F("error - warning progmem buffer overflow"));
+                releaseSem();
                 return;
             }
             strcpy_P(display_buffer2,format);
@@ -170,6 +192,7 @@ int warning_level = 0;
             if (strlen(format) >= DISPLAY_BUFFER_SIZE)
             {
                 dbgSerial->println(F("error - warning buffer overflow"));
+                releaseSem();
                 return;
             }
             vsprintf(display_buffer1,format,var);
@@ -187,7 +210,7 @@ int warning_level = 0;
             extraSerial->print("WARNING - ");
             extraSerial->println(display_buffer1);
         }
-
+        releaseSem();
     }
 #endif
 
@@ -200,6 +223,7 @@ int warning_level = 0;
             return;
 
         checkMem();
+        waitSem();
 
         va_list var;
         va_start(var, format);
@@ -208,6 +232,7 @@ int warning_level = 0;
             if (strlen_P(format) >= DISPLAY_BUFFER_SIZE)
             {
                 dbgSerial->println(F("error - error progmem buffer overflow"));
+                releaseSem();
                 return;
             }
             strcpy_P(display_buffer2,format);
@@ -216,6 +241,7 @@ int warning_level = 0;
             if (strlen(format) >= DISPLAY_BUFFER_SIZE)
             {
                 dbgSerial->println(F("error - error buffer overflow"));
+                releaseSem();
                 return;
             }
             vsprintf(display_buffer1,format,var);
@@ -230,13 +256,14 @@ int warning_level = 0;
             extraSerial->print("ERROR - ");
             extraSerial->println(display_buffer1);
         }
-
+        releaseSem();
     }
 #endif
 
 
 
 // defined on Arduino/Teensy even if MY_DEBUG is turned off
+
 
 #ifndef ESP32
     uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
@@ -286,7 +313,9 @@ int warning_level = 0;
         {
             if (!dbgSerial) return;
             if (level > debug_level) return;
+            waitSem();
             display_bytes_ep(level,0,label,buf,len);
+            releaseSem();
         }
 
 
@@ -294,6 +323,7 @@ int warning_level = 0;
         {
             if (!dbgSerial) return;
             if (level > debug_level) return;
+            waitSem();
             char *obuf = disp_bytes_buf;
             obuf = indent_buf(obuf);
 
@@ -352,6 +382,7 @@ int warning_level = 0;
             }
             *obuf++ = 0;
             dbgSerial->println(disp_bytes_buf);
+            releaseSem();
         }
 
     #else      // display_bytes() on arduino
@@ -405,6 +436,7 @@ int warning_level = 0;
         if (!use_stream)
             use_stream = dbgSerial;
         if (!use_stream) return;
+        waitSem();
 
         // checkMem();
 
@@ -413,6 +445,7 @@ int warning_level = 0;
         {
             indent(use_stream);
             use_stream->println("0x000000 (0 bytes!!)");
+            releaseSem();
             return;
         }
 
@@ -448,6 +481,7 @@ int warning_level = 0;
             use_stream->print("    ");
             use_stream->println(char_buf);
         }
+        releaseSem();
     }
 
 #endif  // WITH_DISPLAY_BYTES_LONG
