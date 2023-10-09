@@ -14,10 +14,17 @@
 #define WITH_ERRORS         1
 #define USE_MEMORY_CHECK    0
 
+#define COLOR_CONST_DEFAULT  0
+#define COLOR_CONST_WARNING  1
+#define COLOR_CONST_ERROR    2
+
+
 #if defined(CORE_TEENSY) || defined(ESP32)
     #define USE_PROGMEM         0
+	extern void setColorString(int what, const char *str);
 #else
     #define USE_PROGMEM         1
+	# define setColorString(w,s)
 #endif
 
 // #include <SoftwareSerial.h> and change below if you want

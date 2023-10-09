@@ -48,9 +48,7 @@ int warning_level = 0;
 //     Bright Cyan 	    96 	106
 //     Bright White 	97  107
 
-#define COLOR_CONST_NONE     0
-#define COLOR_CONST_WARNING  1
-#define COLOR_CONST_ERROR    2
+
 
 #define DISPLAY_BUFFER_WARNING   10
     // will get a warning before we use a format that is
@@ -58,9 +56,19 @@ int warning_level = 0;
 
 
 #if defined(CORE_TEENSY) || defined(ESP32)
-    #define PLATFORM_COLOR_STRING   "\033[92m"      // bright green
-    #define WARNING_COLOR_STRING    "\033[93m"       // yellow
-    #define ERROR_COLOR_STRING      "\033[91m"       // red
+    const char *PLATFORM_COLOR_STRING = "\033[92m";      // bright green
+    const char *WARNING_COLOR_STRING  = "\033[93m";       // yellow
+    const char *ERROR_COLOR_STRING    = "\033[91m";       // red
+
+	void setColorString(int what, const char *str)
+    {
+        if (what == COLOR_CONST_DEFAULT)
+            PLATFORM_COLOR_STRING = str;
+        else if (what == COLOR_CONST_WARNING)
+            WARNING_COLOR_STRING = str;
+        else if (what == COLOR_CONST_ERROR)
+            ERROR_COLOR_STRING = str;
+    }
 #else
     #define PLATFORM_COLOR_STRING   "\033[96m"       // bright cyan
     #define WARNING_COLOR_STRING    "\033[93m"       // yellow
