@@ -164,8 +164,10 @@ int warning_level = 0;
             dbgSerial->println();
 
         if (extraSerial)
+		{
+	        extraSerial->print(PLATFORM_COLOR_STRING);
             extraSerial->println(display_buffer1);
-
+		}
         releaseSem();
     }
 #endif
@@ -215,6 +217,7 @@ int warning_level = 0;
 
         if (extraSerial)
         {
+			extraSerial->print(WARNING_COLOR_STRING);
             extraSerial->print("WARNING - ");
             extraSerial->println(display_buffer1);
         }
@@ -261,6 +264,7 @@ int warning_level = 0;
 
         if (extraSerial)
         {
+			extraSerial->print(ERROR_COLOR_STRING);
             extraSerial->print("ERROR - ");
             extraSerial->println(display_buffer1);
         }
