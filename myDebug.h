@@ -35,6 +35,12 @@
     extern Stream *dbgSerial;
 #else
     #define dbgSerial     (&Serial)
+
+	// added 2024-07-12 for Arduino
+	extern const char *floatToStr(float f);
+		// print it out with 6 decimal places
+		// uses a static buffer, so only one call per display!
+
 #endif
 
 extern Stream *extraSerial;

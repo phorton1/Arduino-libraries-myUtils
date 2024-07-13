@@ -578,3 +578,38 @@ int warning_level = 0;
     }   // extern "C"
 
 #endif // USE_MEMORY_CHECK
+
+
+#if !defined(CORE_TEENSY) && !defined(ESP32)
+	const char *floatToStr(float f)
+		// print it out with 6 decimal places
+		// uses a static buffer, so only one call per display!
+	{
+		#if 0
+			#define DIGITS	6
+			#define BUFSIZE 20
+		    long M = (int) f;
+			f = abs(f - (double) M);
+			f *= 1000000;
+			long E = (long) (f + 0.5);
+			char buf[BUFSIZE]; // "%d.%05d"
+			snprintf(buf, BUFSIZE, "%d.%06d", M, E);
+			return buf;
+		#endif
+
+
+		static char buf[20];
+		long dec1 = (long) f;
+
+		f -= (float) dec1;
+		f *= 1000000;
+		f += + 0.5;
+		long dec2 = f;
+
+		sprintf(buf,"%ld.%06ld",dec1,dec2);
+		return buf;
+	}
+
+
+#endif
+
