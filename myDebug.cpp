@@ -325,9 +325,7 @@ int warning_level = 0;
         {
             if (!dbgSerial) return;
             if (level > debug_level) return;
-            waitSem();
             display_bytes_ep(level,0,label,buf,len);
-            releaseSem();
         }
 
 
@@ -355,6 +353,7 @@ int warning_level = 0;
             {
                 strcpy(obuf," (0 bytes!!)");
                 dbgSerial->println(disp_bytes_buf);
+				releaseSem();
                 return;
             }
 
