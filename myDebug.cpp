@@ -5,8 +5,22 @@
 
 #include "myDebug.h"
 
+
+int debug_level = 0;
+int warning_level = 0;
+Stream *dbgSerial = &Serial;
+Stream *extraSerial = 0;
+
+
+#if WITH_DISPLAY || WITH_WARNINGS || WITH_ERRORS
+    char display_buffer1[DISPLAY_BUFFER_SIZE];
+    #if USE_PROGMEM
+        char display_buffer2[DISPLAY_BUFFER_SIZE];
+    #endif
+#endif
+
+
 #if defined(CORE_TEENSY) || defined(ESP32)
-    Stream *dbgSerial = &Serial;
     volatile bool in_display = 0;
     static void waitSem()
     {
@@ -22,11 +36,6 @@
     #define releaseSem()
 #endif
 
-Stream *extraSerial = 0;
-
-
-int debug_level = 0;
-int warning_level = 0;
 
 // string is "\033[%d;" with following
 // ansi color codes fore back
@@ -47,12 +56,6 @@ int warning_level = 0;
 //     Bright Magenta 	95 	105
 //     Bright Cyan 	    96 	106
 //     Bright White 	97  107
-
-
-
-#define DISPLAY_BUFFER_WARNING   10
-    // will get a warning before we use a format that is
-    // this close to the full buffer size.
 
 
 #if defined(CORE_TEENSY) || defined(ESP32)
@@ -76,13 +79,6 @@ int warning_level = 0;
 #endif
 
 
-#if WITH_DISPLAY || WITH_WARNINGS || WITH_ERRORS
-    char display_buffer1[DISPLAY_BUFFER_SIZE];
-    #if USE_PROGMEM
-        char display_buffer2[DISPLAY_BUFFER_SIZE];
-    #endif
-#endif
-
 
 #if WITH_INDENTS
     int proc_level = 0;
@@ -100,11 +96,6 @@ int warning_level = 0;
 
 #if WITH_DISPLAY
 
-    bool inhibit_cr = false;
-
-    void inhibitCr() { inhibit_cr = true; }
-
-
     void clearDisplay()
     {
         if (dbgSerial)
@@ -114,16 +105,50 @@ int warning_level = 0;
         }
     }
 
-    void display_fxn(int level, const char *format, ...)
+
+	#if defined(CORE_TEENSY) || defined(ESP32)
+		void display_string(const char *alt_color, int level, const String &str)
+		{
+			if (!dbgSerial && !extraSerial)
+				return;
+			checkMem();
+			if (level > debug_level)
+				return;
+			waitSem();
+
+			#if defined(CORE_TEENSY)
+				delay(2);
+			#endif
+
+			if (dbgSerial)
+			{
+				dbgSerial->print(alt_color?alt_color:PLATFORM_COLOR_STRING);
+				#if WITH_INDENTS
+					indent();
+				#endif
+				dbgSerial->println(str.c_str());
+			}
+			if (extraSerial)
+			{
+				extraSerial->print(alt_color?alt_color:PLATFORM_COLOR_STRING);
+				#if WITH_INDENTS
+					indent(extraSerial);
+				#endif
+				extraSerial->println(str.c_str());
+			}
+
+			releaseSem();
+		}
+	#endif
+
+
+    void display_fxn(const char *alt_color, int level, const char *format, ...)
     {
-        if (!dbgSerial)
+        if (!dbgSerial && !extraSerial)
             return;
-
         checkMem();
-
         if (level > debug_level)
             return;
-
         waitSem();
 
         #if defined(CORE_TEENSY)
@@ -142,48 +167,42 @@ int warning_level = 0;
             }
             strcpy_P(display_buffer2,format);
             vsprintf(display_buffer1,display_buffer2,var);
+			vsnprintf(display_buffer1,DISPLAY_BUFFER_SIZE,display_buffer2,var);
         #else
-            if (strlen(format) >= DISPLAY_BUFFER_SIZE)
-            {
-                dbgSerial->println(F("error - display buffer overflow"));
-                releaseSem();
-                return;
-            }
-            vsprintf(display_buffer1,format,var);
+			vsnprintf(display_buffer1,DISPLAY_BUFFER_SIZE,format,var);
         #endif
 
-        dbgSerial->print(PLATFORM_COLOR_STRING);
-        #if WITH_INDENTS
-            indent();
-        #endif
-
-        dbgSerial->print(display_buffer1);
-        if (inhibit_cr)
-            inhibit_cr = false;
-        else
-            dbgSerial->println();
-
+		if (dbgSerial)
+		{
+			dbgSerial->print(alt_color?alt_color:PLATFORM_COLOR_STRING);
+			#if WITH_INDENTS
+				indent();
+			#endif
+			dbgSerial->println(display_buffer1);
+		}
         if (extraSerial)
 		{
-	        extraSerial->print(PLATFORM_COLOR_STRING);
+	        extraSerial->print(alt_color?alt_color:PLATFORM_COLOR_STRING);
+			#if WITH_INDENTS
+				indent(extraSerial);
+			#endif
             extraSerial->println(display_buffer1);
 		}
+
         releaseSem();
     }
 #endif
 
 
+
 #if WITH_WARNINGS
     void warning_fxn(int level, const char *format, ...)
     {
-        if (!dbgSerial)
+        if (!dbgSerial && !extraSerial)
             return;
-
         checkMem();
-
         if (level > warning_level)
             return;
-
         waitSem();
 
         va_list var;
@@ -198,26 +217,26 @@ int warning_level = 0;
             }
             strcpy_P(display_buffer2,format);
             vsprintf(display_buffer1,display_buffer2,var);
+			vsnprintf(display_buffer1,DISPLAY_BUFFER_SIZE,display_buffer2,var);
         #else
-            if (strlen(format) >= DISPLAY_BUFFER_SIZE)
-            {
-                dbgSerial->println(F("error - warning buffer overflow"));
-                releaseSem();
-                return;
-            }
-            vsprintf(display_buffer1,format,var);
+			vsnprintf(display_buffer1,DISPLAY_BUFFER_SIZE,format,var);
         #endif
 
-        dbgSerial->print(WARNING_COLOR_STRING);
-        #if WITH_INDENTS
-            indent();
-        #endif
-        dbgSerial->print("WARNING - ");
-        dbgSerial->println(display_buffer1);
-
+		if (dbgSerial)
+		{
+			dbgSerial->print(WARNING_COLOR_STRING);
+			#if WITH_INDENTS
+				indent();
+			#endif
+			dbgSerial->print("WARNING - ");
+			dbgSerial->println(display_buffer1);
+		}
         if (extraSerial)
         {
 			extraSerial->print(WARNING_COLOR_STRING);
+			#if WITH_INDENTS
+				indent(extraSerial);
+			#endif
             extraSerial->print("WARNING - ");
             extraSerial->println(display_buffer1);
         }
@@ -226,13 +245,11 @@ int warning_level = 0;
 #endif
 
 
-
 #if WITH_ERRORS
     void error_fxn(const char *format, ...)
     {
-        if (!dbgSerial)
+        if (!dbgSerial && !extraSerial)
             return;
-
         checkMem();
         waitSem();
 
@@ -248,20 +265,17 @@ int warning_level = 0;
             }
             strcpy_P(display_buffer2,format);
             vsprintf(display_buffer1,display_buffer2,var);
+			vsnprintf(display_buffer1,DISPLAY_BUFFER_SIZE,display_buffer2,var);
         #else
-            if (strlen(format) >= DISPLAY_BUFFER_SIZE)
-            {
-                dbgSerial->println(F("error - error buffer overflow"));
-                releaseSem();
-                return;
-            }
-            vsprintf(display_buffer1,format,var);
+			vsnprintf(display_buffer1,DISPLAY_BUFFER_SIZE,format,var);
         #endif
 
-        dbgSerial->print(ERROR_COLOR_STRING);
-        dbgSerial->print("ERROR - ");
-        dbgSerial->println(display_buffer1);
-
+        if (dbgSerial)
+		{
+			dbgSerial->print(ERROR_COLOR_STRING);
+			dbgSerial->print("ERROR - ");
+			dbgSerial->println(display_buffer1);
+		}
         if (extraSerial)
         {
 			extraSerial->print(ERROR_COLOR_STRING);
@@ -272,32 +286,6 @@ int warning_level = 0;
     }
 #endif
 
-
-
-// defined on Arduino/Teensy even if MY_DEBUG is turned off
-
-
-#ifndef ESP32
-    uint8_t myButtonPressed(uint8_t pin, uint8_t *state)
-        // available if !MY_DEBUG
-    {
-        checkMem();
-
-        if (digitalRead(pin))
-        {
-            if (*state)
-            {
-                *state = 0;
-            }
-        }
-        else if (!*state)
-        {
-            *state = 1;
-            return 1;
-        }
-        return 0;
-    }
-#endif
 
 
 #if WITH_DISPLAY_BYTES
@@ -322,27 +310,13 @@ int warning_level = 0;
         }
 
         void display_bytes(int level, const char *label, const uint8_t *buf, int len)
-        {
-            if (!dbgSerial) return;
-            if (level > debug_level) return;
-            display_bytes_ep(level,0,label,buf,len);
-        }
-
-
-        void display_bytes_ep(int level, uint8_t ep, const char *label, const uint8_t *buf, int len)
-        {
+		{
             if (!dbgSerial) return;
             if (level > debug_level) return;
             waitSem();
             char *obuf = disp_bytes_buf;
             obuf = indent_buf(obuf);
 
-            uint8_t space_len = 4;
-            if (ep)
-            {
-                *obuf++ = '0' + ep;
-                space_len = 5;
-            }
             while (*label)
             {
                 *obuf++ = *label++;
@@ -370,7 +344,7 @@ int warning_level = 0;
                         *obuf++ = 10;   // "\r";
                         *obuf++ = 13;   // "\n";
                         obuf = indent_buf(obuf);
-                        for (int i=0; i<space_len; i++)
+                        for (int i=0; i<4; i++)
                         {
                             *obuf++ = ' ';
                         }

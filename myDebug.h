@@ -1,18 +1,32 @@
 #ifndef MYDEBUGH
 #define MYDEBUGH
 
-// Client initializes the serial port themselves
+// Client initializes the serial port(s) themselves
 
 #include "Arduino.h"
-// #include <stdint.h>
 
+#ifndef WITH_INDENTS
+	#define WITH_INDENTS        1
+#endif
+#ifndef WITH_INDENT_CHECKS
+	#define WITH_INDENT_CHECKS  0
+#endif
+#ifndef WITH_DISPLAY
+	#define WITH_DISPLAY        1
+#endif
+#ifndef WITH_WARNINGS
+	#define WITH_WARNINGS       1
+#endif
+#ifndef WITH_ERRORS
+	#define WITH_ERRORS         1
+#endif
+#ifndef WITH_DISPLAY_BYTES
+    #define WITH_DISPLAY_BYTES       1
+#endif
+#ifndef WITH_DISPLAY_BYTES_LONG
+    #define WITH_DISPLAY_BYTES_LONG  1
+#endif
 
-#define WITH_INDENTS        1
-#define WITH_INDENT_CHECKS  0
-#define WITH_DISPLAY        1
-#define WITH_WARNINGS       1
-#define WITH_ERRORS         1
-#define USE_MEMORY_CHECK    0
 
 #define COLOR_CONST_DEFAULT  0
 #define COLOR_CONST_WARNING  1
@@ -21,45 +35,23 @@
 
 #if defined(CORE_TEENSY) || defined(ESP32)
     #define USE_PROGMEM         0
+    #define USE_MEMORY_CHECK	0
 	extern void setColorString(int what, const char *str);
 #else
     #define USE_PROGMEM         1
-	# define setColorString(w,s)
-#endif
+    #define USE_MEMORY_CHECK	0
+	#define setColorString(w,s)
 
-// #include <SoftwareSerial.h> and change below if you want
-// Change below on Teensy to Serial1 if you want
-
-#if defined(CORE_TEENSY) || defined(ESP32)
-    #undef USE_MEMORY_CHECK
-    extern Stream *dbgSerial;
-#else
-    #define dbgSerial     (&Serial)
-
-	// added 2024-07-12 for Arduino
 	extern const char *floatToStr(float f);
 		// print it out with 6 decimal places
 		// uses a static buffer, so only one call per display!
-
 #endif
 
+
+extern int debug_level;
+extern int warning_level;
+extern Stream *dbgSerial;
 extern Stream *extraSerial;
-
-
-#if WITH_DISPLAY
-    // you can turn these on or off individually
-    // but they default to following WITH_DISPLAY
-    #define WITH_DISPLAY_BYTES       1
-    #define WITH_DISPLAY_BYTES_EP    1
-    #define WITH_DISPLAY_BYTES_LONG  1
-#else
-    #define WITH_DISPLAY_BYTES       0
-    #define WITH_DISPLAY_BYTES_EP    0
-    #define WITH_DISPLAY_BYTES_LONG  0
-#endif
-
-
-
 
 
 //---------------------------------------------------
@@ -80,31 +72,42 @@ extern Stream *extraSerial;
     #define proc_leave()
 #endif
 
+
 #if WITH_DISPLAY
     #if USE_PROGMEM
-        #define display(l,f,...)        display_fxn(l,PSTR(f),__VA_ARGS__)
+        #define display(l,f,...)        	display_fxn(0,l,PSTR(f),__VA_ARGS__)
+		#define display_color(c,l,f,...)	display_fxn(P_STR(c),l,PSTR(f),__VA_ARGS__)
     #else
-        #define display(l,f,...)        display_fxn(l,f,__VA_ARGS__)
+        #define display(l,f,...)        	display_fxn(0,l,f,__VA_ARGS__)
+		#define display_color(c,l,f,...)	display_fxn(c,l,f,__VA_ARGS__)
     #endif
-    extern void display_fxn(int level, const char *format, ...);
+
+    extern void display_fxn(const char *alt_color, int level, const char *format, ...);
     extern void clearDisplay();
-    extern void inhibitCr();
+
+	#if defined(CORE_TEENSY) || defined(ESP32)
+		extern void display_string(const char *alt_color, int level, const String &str);
+			// Exists only on Teensy and ESP32 as I tire of this stuff
+			// Allows for creating large Strings that can be explicitly and simply
+			// set to dbgSerial and extraSerial
+	#endif
 
 	#if WITH_INDENTS
 		#if USE_PROGMEM
-			#define display_level(d,l,f,...)	{ int save = proc_level; proc_level=l; display_fxn(d,PSTR(f),__VA_ARGS__); proc_level=save; }
+			#define display_level(d,l,f,...)	{ int save = proc_level; proc_level=l; display_fxn(0,d,PSTR(f),__VA_ARGS__); proc_level=save; }
 		#else
-			#define display_level(d,l,f,...)	{ int save = proc_level; proc_level=l; display_fxn(d,f,__VA_ARGS__); proc_level=save; }
+			#define display_level(d,l,f,...)	{ int save = proc_level; proc_level=l; display_fxn(0,d,f,__VA_ARGS__); proc_level=save; }
 		#endif
 	#else
 		#if USE_PROGMEM
-			#define display_level(d,l,f,...)        display_fxn(d,PSTR(f),__VA_ARGS__)
+			#define display_level(d,l,f,...)        display_fxn(0,d,PSTR(f),__VA_ARGS__)
 		#else
-			#define display_level(d,l,f,...)        display_fxn(dl,f,__VA_ARGS__)
+			#define display_level(d,l,f,...)        display_fxn(0,dl,f,__VA_ARGS__)
 		#endif
 	#endif
 
 #else
+	#define display_color(c,l,f,....)
 	#define display_level(d,l,f,...)
     #define display(l,f,...)
     #define clearDisplay()
@@ -138,15 +141,7 @@ extern Stream *extraSerial;
 
 #if WITH_DISPLAY_BYTES
     extern void display_bytes(int level, const char *label, const uint8_t *buf, int len);
-    #if defined(CORE_TEENSY) || defined(ESP32)
-        // display_bytes_ep() only available on teensy
-        extern void display_bytes_ep(int level, const uint8_t ep, const char *label, const uint8_t *buf, int len);
-    #endif
 #else
-    #if defined(CORE_TEENSY) || defined(ESP32)
-        // and we enforce it by not defining a null method otherwise
-        #define display_bytes_ep(l,a,b,x,z)
-    #endif
     #define display_bytes(l,a,b,z)
 #endif
 
@@ -176,17 +171,6 @@ extern Stream *extraSerial;
 #endif
 
 
-//---------------------------------------------------
-// these are always defined
-//---------------------------------------------------
-
-extern int debug_level;
-extern int warning_level;
-
-#ifndef ESP32
-    // defined on Arduino/Teensy even if MY_DEBUG is turned off
-    extern uint8_t myButtonPressed(uint8_t pin, uint8_t *state);
-#endif
 
 
 //----------------------------------------

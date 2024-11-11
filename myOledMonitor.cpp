@@ -70,7 +70,7 @@ static volatile bool in_print;
 
 static void update();
 static void updateTask(void *param);
-extern void display_fxn(int level, const char *format, ...);
+extern void display_fxn(const char *alt_color, int level, const char *format, ...);
 
 #define buf_row(r)		(&screen_buf[(r) * (oled_cols+1)])
 
@@ -111,7 +111,7 @@ myOledMonitor::myOledMonitor(uint16_t driver, int font_size/*=2*/, bool with_tas
 void myOledMonitor::init(int rotation/*=0*/, bool with_display/*=false*/)
 {
 	#if DEBUG_SCREEN
-		display_fxn(0,"myOledMonitor::init(%d,%d) driver(0x%04x) font(%d) task(%d) screen(%d,%d) char(%d,%d)",
+		display_fxn(0,0,"myOledMonitor::init(%d,%d) driver(0x%04x) font(%d) task(%d) screen(%d,%d) char(%d,%d)",
 			rotation,with_display,
 			g_driver,
 			g_font_size,
@@ -127,7 +127,7 @@ void myOledMonitor::init(int rotation/*=0*/, bool with_display/*=false*/)
 
 	if (g_driver == DRIVER_ST7789_320x170)
 	{
-		display_fxn(0,"initing 7789",0);
+		display_fxn(0,0,"initing 7789",0);
 		st7789 = new Adafruit_ST7789(ESP32_CS, ST7789_DC, ST7789_RST);
 		st7789->init(screen_width,screen_height);
 		oled = st7789;
@@ -156,7 +156,7 @@ void myOledMonitor::init(int rotation/*=0*/, bool with_display/*=false*/)
 	oled_rows = screen_height/char_height;
 
 	#if DEBUG_SCREEN
-		display_fxn(0,"oled_rows(%d) oled_cols(%d)",oled_rows,oled_cols);
+		display_fxn(0,0,"oled_rows(%d) oled_cols(%d)",oled_rows,oled_cols);
 	#endif
 	// initialize the screen buffer
 
@@ -195,7 +195,7 @@ void myOledMonitor::init(int rotation/*=0*/, bool with_display/*=false*/)
         // must run on ESP32_CORE_ARDUINO
 
         #if DEBUG_SCREEN
-			display_fxn(0,"creating myOledMonitor::monUpdateTask pinned to core %d",ESP32_CORE_ARDUINO);
+			display_fxn(0,0,"creating myOledMonitor::monUpdateTask pinned to core %d",ESP32_CORE_ARDUINO);
 	    #endif
 
 		xTaskCreatePinnedToCore(
@@ -215,7 +215,7 @@ void updateTask(void *param)
 {
     delay(1000);
 	#if DEBUG_SCREEN
-		display_fxn(0,"starting myOledMonitor::monUpdateTask() on core(%d)",xPortGetCoreID());
+		display_fxn(0,0,"starting myOledMonitor::monUpdateTask() on core(%d)",xPortGetCoreID());
 	#endif
 	
     while (1)
@@ -244,7 +244,7 @@ static void update()
 	int out_row = 0;
 
 	#if DEBUG_SCREEN
-		display_fxn(0,"update(%d) use_tail(%d) use_head(%d)",last_counter,use_tail,use_head);
+		display_fxn(0,0,"update(%d) use_tail(%d) use_head(%d)",last_counter,use_tail,use_head);
 	#endif
 
 	if (use_tail > use_head)
@@ -252,7 +252,7 @@ static void update()
 		while (use_tail < oled_rows+1)
 		{
 			#if DEBUG_SCREEN
-				display_fxn(0,"tail_row(%d) use_tail(%d) s=%s",out_row,use_tail,buf_row(use_tail));
+				display_fxn(0,0,"tail_row(%d) use_tail(%d) s=%s",out_row,use_tail,buf_row(use_tail));
 			#endif
 
 			oled->setCursor(0,out_row * char_height);
@@ -266,7 +266,7 @@ static void update()
 	while (use_tail < use_head)
 	{
 		#if DEBUG_SCREEN
-			display_fxn(0,"head_row(%d) use_tail(%d) s=%s",out_row,use_tail,buf_row(use_tail));
+			display_fxn(0,0,"head_row(%d) use_tail(%d) s=%s",out_row,use_tail,buf_row(use_tail));
 		#endif
 
 		oled->setCursor(0,out_row * char_height);
@@ -296,7 +296,7 @@ void myOledMonitor::println(const char *format, ...)
 	int len = strlen(buffer);
 
 	if (g_with_display)
-		display_fxn(0,"mon(%d): %s",print_counter,buffer);
+		display_fxn(0,0,"mon(%d): %s",print_counter,buffer);
 	print_counter++;
 
 	if (len < oled_cols)
