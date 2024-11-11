@@ -16,8 +16,6 @@
 
 #include <ESPTelnetStream.h>
 
-#define WITH_MY_ESP_TELNET_TASK	 1
-
 
 class myESPTelnetStream : public ESPTelnetStream
 {
@@ -30,9 +28,7 @@ private:
 	
 	size_t write(uint8_t) override;
 
-	#if WITH_MY_ESP_TELNET_TASK
-		static void telnetTask(void *param);
-	#endif
+	static void telnetTask(void *param);
   
 	void flushOutput();
 	

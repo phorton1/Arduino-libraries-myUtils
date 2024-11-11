@@ -5,14 +5,14 @@
 // STA_DISCONNECTED and use a reconnect timer, and restart the
 // Telnet when it reconnects.
 
-// However the immediate errors I am seeing are not because
+// However the immediate errors I was seeing were not because
 // a lost STATION connection, but rather a failure in the console
-// to write to the socket.  I'm not quite sure what to do about that.
+// to write to the socket.
 //
 // Before implementing the task, I was getting a lot of failures
 // with current console timing of about 10 seconds to send 0's for
 // heartbeat check. But I noticed that if I called client.stop()
-// it would "recovers" (reconnects).
+// it would "recovers" (reconnect).
 //
 // Without this task approach, calling telnet.loop() from the Arduino loop()
 // essentially blocks the NMEA processing, but once I implemented the task
@@ -22,13 +22,10 @@
 // I still get occasional long delays in the socket client, but nonetheless,
 // it appear to work much better than without the task.
 
-
 #ifdef ESP32
 
 #include "myESPTelnetStream.h"
 #include <myDebug.h>
-
-
 
 #define TELNET_MS		 300
 #define MAX_TELNET_BYTES 10000
@@ -40,45 +37,38 @@ static uint32_t last_telnet_time;
 
 
 void myESPTelnetStream::init()
+	// this method called init because base class begin non-virtual
 {
 	begin();	// call base class's non-virtual begin method
 
-    #if WITH_MY_ESP_TELNET_TASK
-        // Must run on ESP32_CORE_ARDUINO==1
-        // Cannot run on ESP32_CORE_OTHER==0
-        // see notes in bilgeAlarm.cpp lcdPrint()
-		#define USE_CORE 	1
-        display(0,"starting telnetTask pinned to core %d",USE_CORE);
-        xTaskCreatePinnedToCore(
-            telnetTask,
-            "telnetTask",
-            4096,	// stack
-            this,
-            1,  	// priority
-            NULL,   // handle
-            USE_CORE);		// core
-    #endif
+	// Must run on ESP32_CORE_ARDUINO==1
+	// Cannot run on ESP32_CORE_OTHER==0
+	// see notes in bilgeAlarm.cpp lcdPrint()
+	#define USE_CORE 	1
+	display(0,"starting telnetTask pinned to core %d",USE_CORE);
+	xTaskCreatePinnedToCore(
+		telnetTask,		// task
+		"telnetTask",	// name
+		4096,			// stack
+		this,			// param
+		1,  			// priority
+		NULL,   		// handle
+		USE_CORE);		// core
 }
 
 
-#if WITH_MY_ESP_TELNET_TASK
-	void myESPTelnetStream::telnetTask(void *this_ptr)
+void myESPTelnetStream::telnetTask(void *this_ptr)
+{
+	delay(1000);
+	display(0,"starting telnetTask loop on core(%d)",xPortGetCoreID());
+	myESPTelnetStream *self = (myESPTelnetStream *) this_ptr;
+	while (1)
 	{
-		delay(1000);
-		display(0,"starting telnetTask loop on core(%d)",xPortGetCoreID());
-		myESPTelnetStream *self = (myESPTelnetStream *) this_ptr;
-		while (1)
-		{
-			vTaskDelay(1);
-
-			self->loop();
-			#if WITH_MY_ESP_TELNET_TASK
-				self->flushOutput();
-			#endif
-		}
+		vTaskDelay(1);
+		self->loop();
+		self->flushOutput();
 	}
-#endif
-
+}
 
 
 
@@ -110,11 +100,6 @@ size_t myESPTelnetStream::write(uint8_t byte)	// override;
 	}
 
 	telnet_buffer[telnet_bytes++] = byte;
-
-	#if !WITH_MY_ESP_TELNET_TASK
-		flushOutput();
-	#endif
-
 	return 1;
 }
 
@@ -169,14 +154,14 @@ void myESPTelnetStream::flushOutput()
 				Serial.print("/");
 				Serial.println(telnet_bytes);
 
-				// It was hanging occastionally ... and this call to client.stop()
-				// seemed to fix it, but does not seep needed with the task approach.
 
-				#if WITH_MY_ESP_TELNET_TASK
+				#if 1
 					size_t move_len = telnet_bytes-rslt;
 					memcpy(telnet_buffer,&telnet_buffer[rslt],move_len);
 					telnet_bytes = move_len;
 				#else
+					// It was hanging occastionally ... and this call to client.stop()
+					// seemed to fix it, but does not seep needed with the task approach.
 					client.stop();
 					telnet_bytes = 0;
 				#endif
