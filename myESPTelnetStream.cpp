@@ -30,45 +30,13 @@
 #define TELNET_MS		 300
 #define MAX_TELNET_BYTES 10000
 
-volatile bool in_flush;
-volatile size_t telnet_bytes;
+static volatile bool connected;
+static volatile bool in_flush;
+static volatile size_t telnet_bytes;
 static uint8_t telnet_buffer[MAX_TELNET_BYTES];
 static uint32_t last_telnet_time;
 
 
-void myESPTelnetStream::init()
-	// this method called init because base class begin non-virtual
-{
-	begin();	// call base class's non-virtual begin method
-
-	// Must run on ESP32_CORE_ARDUINO==1
-	// Cannot run on ESP32_CORE_OTHER==0
-	// see notes in bilgeAlarm.cpp lcdPrint()
-	#define USE_CORE 	1
-	display(0,"starting telnetTask pinned to core %d",USE_CORE);
-	xTaskCreatePinnedToCore(
-		telnetTask,		// task
-		"telnetTask",	// name
-		4096,			// stack
-		this,			// param
-		1,  			// priority
-		NULL,   		// handle
-		USE_CORE);		// core
-}
-
-
-void myESPTelnetStream::telnetTask(void *this_ptr)
-{
-	delay(1000);
-	display(0,"starting telnetTask loop on core(%d)",xPortGetCoreID());
-	myESPTelnetStream *self = (myESPTelnetStream *) this_ptr;
-	while (1)
-	{
-		vTaskDelay(1);
-		self->loop();
-		self->flushOutput();
-	}
-}
 
 
 
@@ -142,6 +110,10 @@ void myESPTelnetStream::flushOutput()
 				Serial.print(rslt);
 				Serial.print("/");
 				Serial.println(telnet_bytes);
+
+				extraSerial = 0;
+					// layer violation
+
 				client.stop();
 				telnet_bytes = 0;
 			}
