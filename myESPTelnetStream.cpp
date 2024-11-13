@@ -36,7 +36,11 @@ static volatile size_t telnet_bytes;
 static uint8_t telnet_buffer[MAX_TELNET_BYTES];
 static uint32_t last_telnet_time;
 
-
+uint32_t myESPTelnetStream::m_num_missed;		// writes while disconnected
+uint32_t myESPTelnetStream::m_num_error;		// flush errors
+uint32_t myESPTelnetStream::m_num_warning;		// flush warnings
+uint32_t myESPTelnetStream::m_num_overflow;		// overflows in write
+uint32_t myESPTelnetStream::m_num_wait;			// wait loops for flushOutput from write
 
 
 
@@ -44,12 +48,14 @@ size_t myESPTelnetStream::write(uint8_t byte)	// override;
 {
 	if (!client || !isConnected())
 	{
+		m_num_missed++;		// writes while disconnected
 		telnet_bytes = 0;
 		return 0;
 	}
 	
 	if (telnet_bytes >= MAX_TELNET_BYTES)
 	{
+		m_num_overflow++;		// overflows in write
 		Serial.println("myESPTelnetStream flushing buffer");
 		flushOutput();
 
@@ -60,6 +66,7 @@ size_t myESPTelnetStream::write(uint8_t byte)	// override;
 			uint32_t now = millis();
 			if (now - start > 1000)
 			{
+				m_num_wait++;			// wait loops for flushOutput from write
 				Serial.print("waiting for flush to complete ");
 				Serial.println(counter++);
 				start = now;
@@ -110,6 +117,7 @@ void myESPTelnetStream::flushOutput()
 				Serial.print(rslt);
 				Serial.print("/");
 				Serial.println(telnet_bytes);
+				m_num_error++;		// flush errors
 
 				extraSerial = 0;
 					// layer violation
@@ -125,7 +133,7 @@ void myESPTelnetStream::flushOutput()
 				Serial.print(rslt);
 				Serial.print("/");
 				Serial.println(telnet_bytes);
-
+				m_num_warning++;		// flush warnings				
 
 				#if 1
 					size_t move_len = telnet_bytes-rslt;

@@ -24,6 +24,12 @@ public:
 
 	void flushOutput();
 
+	static uint32_t m_num_missed;		// writes while disconnected
+	static uint32_t m_num_error;		// flush errors
+	static uint32_t m_num_warning;		// flush warnings
+	static uint32_t m_num_overflow;		// overflows in write
+	static uint32_t m_num_wait;			// wait loops for flushOutput from write
+
 private:
 	
 	size_t write(uint8_t) override;
